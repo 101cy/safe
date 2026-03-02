@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Find civil defence shelters in the Republic of Cyprus. Use your location or search by address. Official data from Cyprus Civil Defence.">
+  <link rel="canonical" href="https://safe.101.cy/">
+  <title>SAFE.101.CY — Shelters in Cyprus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="logo">SAFE<span class="logo-dot">.101.CY</span></a>
+      <nav class="lang-nav" aria-label="Language">
+        <button type="button" class="lang-btn is-active" data-lang="en" aria-pressed="true">EN</button>
+        <span class="lang-sep" aria-hidden="true">/</span>
+        <button type="button" class="lang-btn" data-lang="el" aria-pressed="false">ΕΛ</button>
+        <span class="lang-sep" aria-hidden="true">/</span>
+        <button type="button" class="lang-btn" data-lang="tr" aria-pressed="false">TR</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <h1 data-i18n="hero.title">Find your nearest shelter</h1>
+    </section>
+
+    <section class="actions">
+      <div class="action-card action-gps">
+        <div class="action-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <h2 data-i18n="action.gps.title">Use my location</h2>
+        <p data-i18n="action.gps.desc">Share your GPS position to find the closest shelters.</p>
+        <button type="button" class="btn btn-primary" id="btn-use-location" aria-label="Use my current location">
+          <span class="btn-text" data-i18n="action.gps.btn">Share location</span>
+          <span class="btn-loading" aria-hidden="true" data-i18n="action.gps.loading">Locating…</span>
+        </button>
+        <p class="action-hint" id="location-status"></p>
+      </div>
+
+      <div class="action-card action-search">
+        <div class="action-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <h2 data-i18n="action.search.title">Search by address or place</h2>
+        <p data-i18n="action.search.desc">Enter an address, postal code, or point of interest in Cyprus.</p>
+        <div class="search-wrap">
+          <input type="search" id="search-input" class="search-input" placeholder="e.g. Nicosia, Limassol, 1016" autocomplete="off" data-i18n-placeholder="action.search.placeholder" aria-label="Address or place search">
+          <button type="button" class="btn btn-secondary" id="btn-search" data-i18n="action.search.btn" aria-label="Search">Search</button>
+        </div>
+        <p class="action-hint" id="search-status"></p>
+      </div>
+    </section>
+
+    <section class="map-section" id="map-section">
+      <div class="map-header">
+        <h2 data-i18n="map.title">Map</h2>
+        <p class="map-legend"><span class="legend-marker"></span> <span data-i18n="map.legend">Shelter</span></p>
+      </div>
+      <div id="map" class="map" role="application" aria-label="Map of shelters in Cyprus"></div>
+      <aside class="results-panel" id="results-panel" aria-label="Nearest shelters list">
+        <div class="results-header">
+          <h3 id="results-title" data-i18n="results.title">Nearest shelters</h3>
+          <button type="button" class="btn-close-panel" id="btn-close-panel" data-i18n-aria-label="results.close" aria-label="Close list">×</button>
+        </div>
+        <ul class="results-list" id="results-list"></ul>
+      </aside>
+    </section>
+
+    <section class="official section-inner">
+      <h2 data-i18n="official.title">Official sources &amp; app</h2>
+      <p data-i18n="official.intro">Shelter data is provided by the <strong>Cyprus Civil Defence</strong> under the Ministry of Interior. For the best experience on your phone, use the official app.</p>
+      <ul class="official-links">
+        <li><a href="https://www.gov.cy/moi/en/civil-defense/" target="_blank" rel="noopener noreferrer" data-i18n="official.link1">Civil Defence — Gov.cy</a></li>
+        <li><a href="https://www.moi.gov.cy/moi/cd/cd.nsf/home_en/home_en?openform" target="_blank" rel="noopener noreferrer" data-i18n="official.link2">Civil Defence Department — Ministry of Interior</a></li>
+        <li><a href="https://safecy.moi.gov.cy/data/privacypolicy.html" target="_blank" rel="noopener noreferrer" data-i18n="official.link3">SafeCY Privacy Policy</a></li>
+      </ul>
+      <div class="app-download">
+        <p class="app-title" data-i18n="app.title">SafeCY — Official app</p>
+        <p class="app-desc" data-i18n="app.desc">Find shelters by GPS, address or postal code. Available in Greek and English. Free on Android and iOS.</p>
+        <div class="app-badges">
+          <a href="https://apps.apple.com/cy/app/safecy/id6746747464" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-ios" data-i18n="app.ios" aria-label="Download SafeCY on the App Store">App Store</a>
+          <a href="https://play.google.com/store/apps/details?id=com.moi.safecy" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-android" data-i18n="app.android" aria-label="Get SafeCY on Google Play">Google Play</a>
+        </div>
+      </div>
+      <p class="contact-note"><span data-i18n="contact.label">Emergency contact: Civil Defence</span> <a href="tel:22403450">22403450</a> / <a href="tel:22403452">22403452</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p class="footer-peace" data-i18n="footer.peace">We stand for peace.</p>
+      <div class="footer-grid">
+        <p class="footer-brand"><a href="/">SAFE.101.CY</a> <span data-i18n="footer.tagline">— Shelter finder for the Republic of Cyprus. Not an official government site.</span></p>
+        <p class="footer-meta">
+          <span class="footer-privacy" data-i18n="footer.privacy">This site does not use cookies and does not collect data.</span>
+          <span class="footer-sep"> · </span>
+          <span class="footer-updated" data-i18n="footer.updated">Shelter database last updated: March 2, 2026.</span>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
