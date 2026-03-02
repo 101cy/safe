@@ -173,6 +173,11 @@
   const resultsTitle = $('#results-title');
   const resultsList = $('#results-list');
   const btnClosePanel = $('#btn-close-panel');
+  const searchSuggestions = $('#search-suggestions');
+  const AUTCOMPLETE_DEBOUNCE_MS = 350;
+  const MIN_QUERY_LENGTH = 2;
+  let autocompleteDebounceTimer = null;
+  let lastSuggestionsQuery = '';
 
   function t(key) {
     return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key] || key;
@@ -424,6 +429,68 @@
     }).then(r => r.json());
   }
 
+  function geocodeSuggestions(query) {
+    const params = new URLSearchParams({
+      q: query + ', Cyprus',
+      format: 'json',
+      limit: '8',
+      countrycodes: 'cy'
+    });
+    return fetch(`${NOMINATIM_URL}?${params}`, {
+      headers: { 'Accept': 'application/json' }
+    }).then(r => r.json());
+  }
+
+  function hideSuggestions() {
+    if (searchSuggestions) {
+      searchSuggestions.classList.remove('is-open');
+      searchSuggestions.innerHTML = '';
+      if (searchInput) searchInput.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function showSuggestions(results) {
+    if (!searchSuggestions) return;
+    searchSuggestions.innerHTML = results.slice(0, 8).map((r) => {
+      const name = escapeHtml(r.display_name || '');
+      return `<li class="search-suggestion-item" role="option" data-lat="${r.lat}" data-lon="${r.lon}" tabindex="-1">${name}</li>`;
+    }).join('');
+    searchSuggestions.classList.add('is-open');
+    if (searchInput) searchInput.setAttribute('aria-expanded', 'true');
+    $$('.search-suggestion-item', searchSuggestions).forEach((el, i) => {
+      el.addEventListener('click', () => {
+        const lat = parseFloat(el.dataset.lat);
+        const lon = parseFloat(el.dataset.lon);
+        hideSuggestions();
+        if (searchInput) searchInput.value = el.textContent;
+        showNearest(lat, lon, `${t('results.title')} — ${el.textContent}`);
+        searchStatus.textContent = t('search.found');
+        searchStatus.classList.remove('error');
+        searchStatus.classList.add('success');
+      });
+    });
+  }
+
+  function onSearchInput() {
+    const q = (searchInput && searchInput.value || '').trim();
+    if (autocompleteDebounceTimer) clearTimeout(autocompleteDebounceTimer);
+    if (q.length < MIN_QUERY_LENGTH) {
+      hideSuggestions();
+      return;
+    }
+    autocompleteDebounceTimer = setTimeout(() => {
+      lastSuggestionsQuery = q;
+      geocodeSuggestions(q).then(results => {
+        if (lastSuggestionsQuery !== q) return;
+        if (!results || results.length === 0) {
+          hideSuggestions();
+          return;
+        }
+        showSuggestions(results);
+      }).catch(() => hideSuggestions());
+    }, AUTCOMPLETE_DEBOUNCE_MS);
+  }
+
   function searchAddress() {
     const q = (searchInput && searchInput.value || '').trim();
     if (!q) {
@@ -461,8 +528,26 @@
 
   if (btnUseLocation) btnUseLocation.addEventListener('click', useLocation);
   if (btnSearch) btnSearch.addEventListener('click', searchAddress);
-  if (searchInput) searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchAddress(); });
+  if (searchInput) {
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (searchSuggestions && searchSuggestions.classList.contains('is-open') && searchSuggestions.querySelector('.search-suggestion-item')) {
+          searchSuggestions.querySelector('.search-suggestion-item').click();
+        } else {
+          searchAddress();
+        }
+      }
+      if (e.key === 'Escape') hideSuggestions();
+    });
+    searchInput.addEventListener('input', onSearchInput);
+    searchInput.addEventListener('focus', () => { if ((searchInput.value || '').trim().length >= MIN_QUERY_LENGTH && searchSuggestions.innerHTML) searchSuggestions.classList.add('is-open'); });
+    searchInput.addEventListener('blur', () => { setTimeout(hideSuggestions, 200); });
+  }
   if (btnClosePanel) btnClosePanel.addEventListener('click', closeResultsPanel);
+  document.addEventListener('click', e => {
+    if (searchSuggestions && searchSuggestions.classList.contains('is-open') && searchInput && !searchInput.contains(e.target) && !searchSuggestions.contains(e.target))
+      hideSuggestions();
+  });
 
   $$('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => setLanguage(btn.getAttribute('data-lang')));

@@ -52,7 +52,10 @@
         <h2 data-i18n="action.search.title">Search by address or place</h2>
         <p data-i18n="action.search.desc">Enter an address, postal code, or point of interest in Cyprus.</p>
         <div class="search-wrap">
-          <input type="search" id="search-input" class="search-input" placeholder="e.g. Nicosia, Limassol, 1016" autocomplete="off" data-i18n-placeholder="action.search.placeholder" aria-label="Address or place search">
+          <div class="search-autocomplete-wrap">
+            <input type="search" id="search-input" class="search-input" placeholder="e.g. Nicosia, Limassol, 1016" autocomplete="off" data-i18n-placeholder="action.search.placeholder" aria-label="Address or place search" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggestions">
+            <ul class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Address suggestions"></ul>
+          </div>
           <button type="button" class="btn btn-secondary" id="btn-search" data-i18n="action.search.btn" aria-label="Search">Search</button>
         </div>
         <p class="action-hint" id="search-status"></p>
