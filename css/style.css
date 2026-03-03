@@ -163,6 +163,61 @@ body {
   max-width: 52ch;
 }
 
+/* Panic section */
+.panic {
+  margin-bottom: 1.75rem;
+}
+
+.panic-card {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid #f3b1a8;
+  background: #fff4f2;
+  box-shadow: 0 4px 16px rgba(179, 27, 0, 0.08);
+}
+
+.panic-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  justify-content: space-between;
+}
+
+.panic-text {
+  max-width: 460px;
+}
+
+.panic-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b3261e;
+}
+
+.btn-panic {
+  background: #b3261e;
+  color: #fff;
+  border-radius: 999px;
+  padding-inline: 1.6rem;
+  box-shadow: 0 6px 18px rgba(179, 38, 30, 0.3);
+}
+
+.btn-panic:hover {
+  background: #921f18;
+}
+
+@media (min-width: 769px) {
+  .panic-card {
+    padding: 1.25rem 1.5rem;
+  }
+  .panic-title {
+    font-size: 1rem;
+  }
+}
+
 /* Action cards */
 .actions {
   display: grid;
@@ -538,6 +593,77 @@ body {
   display: flex;
 }
 
+.results-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Nearest block inside panel (on map) */
+.results-nearest-block {
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
+  margin: 0;
+  background: #fff4f2;
+  border-bottom: 1px solid #f3b1a8;
+}
+
+.results-nearest-block .nearest-shelter-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #b3261e;
+}
+
+.results-nearest-block .nearest-shelter-address {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.35;
+}
+
+.results-nearest-block .nearest-shelter-meta {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.results-nearest-block .btn-navigate-walking {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+/* Error state when GPS denied / failed (e.g. from panic) */
+.results-error-state {
+  flex-shrink: 0;
+  padding: 1.25rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.results-error-message {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.results-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.results-error-actions .btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.65rem 1rem;
+}
+
 .results-header {
   padding: 1rem 1.25rem;
   display: flex;
@@ -559,9 +685,52 @@ body {
   }
 }
 
+.btn-navigate-walking {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  background: #b3261e;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: background 0.2s ease;
+  box-shadow: 0 4px 14px rgba(179, 38, 30, 0.25);
+}
+
+.btn-navigate-walking:hover {
+  background: #921f18;
+  color: #fff;
+}
+
+@media (min-width: 769px) {
+  .results-nearest-block {
+    padding: 1.25rem 1.5rem;
+  }
+  .results-nearest-block .nearest-shelter-title {
+    font-size: 0.9rem;
+  }
+  .results-nearest-block .nearest-shelter-address {
+    font-size: 1.1rem;
+  }
+  .results-nearest-block .nearest-shelter-meta {
+    font-size: 1rem;
+  }
+  .results-nearest-block .btn-navigate-walking {
+    font-size: 1.05rem;
+    padding: 0.85rem 1.25rem;
+  }
+}
+
 .btn-close-panel {
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -18,6 +18,8 @@
   const TRANSLATIONS = {
     en: {
       'hero.title': 'Find your nearest shelter',
+      'panic.title': 'Emergency',
+      'panic.btn': 'Take me to nearest shelter',
       'action.gps.title': 'Use my location',
       'action.gps.desc': 'Share your GPS position to find the closest shelters.',
       'action.gps.btn': 'Share location',
@@ -30,6 +32,9 @@
       'map.legend': 'Shelter',
       'results.title': 'Nearest shelters',
       'results.close': 'Close list',
+      'results.navigate': 'Open in Maps — Navigate to nearest shelter',
+      'nearest.title': 'Your nearest shelter',
+      'nearest.navigate_walking': 'Open in Maps — Walking directions',
       'official.title': 'Official sources & app',
       'official.intro': 'Shelter data is provided by the <strong>Cyprus Civil Defence</strong> under the Ministry of Interior. For the best experience on your phone, use the official app.',
       'official.link1': 'Civil Defence — Gov.cy',
@@ -50,6 +55,8 @@
       'location.error_unavailable': 'Could not get your location. Location is unavailable.',
       'location.error_timeout': 'Could not get your location. Request timed out.',
       'location.error_default': 'Could not get your location. Please try again.',
+      'location.try_again': 'Try again',
+      'location.fallback_search': 'Search by address',
       'search.prompt': 'Please enter an address or place name.',
       'search.no_results': 'No results found. Try a different address or place in Cyprus.',
       'search.found': 'Location found. Showing nearest shelters.',
@@ -63,6 +70,8 @@
     },
     el: {
       'hero.title': 'Βρείτε το πλησιέστερο καταφύγιο',
+      'panic.title': 'Έκτακτη ανάγκη',
+      'panic.btn': 'Οδήγησέ με στο πλησιέστερο καταφύγιο',
       'action.gps.title': 'Χρήση της τοποθεσίας μου',
       'action.gps.desc': 'Μοιραστείτε τις συντεταγμένες GPS σας για να βρείτε τα πλησιέστερα καταφύγια.',
       'action.gps.btn': 'Κοινοποίηση τοποθεσίας',
@@ -75,6 +84,9 @@
       'map.legend': 'Καταφύγιο',
       'results.title': 'Πλησιέστερα καταφύγια',
       'results.close': 'Κλείσιμο λίστας',
+      'results.navigate': 'Άνοιγμα σε Χάρτες — Οδήγηση στο πλησιέστερο καταφύγιο',
+      'nearest.title': 'Το πλησιέστερο καταφύγιό σας',
+      'nearest.navigate_walking': 'Άνοιγμα σε Χάρτες — Οδηγίες περπατήματος',
       'official.title': 'Επίσημες πηγές και εφαρμογή',
       'official.intro': 'Τα δεδομένα καταφυγών παρέχονται από την Πολιτική Άμυνα Κύπρου υπό το Υπουργείο Εσωτερικών. Για την καλύτερη εμπειρία στο κινητό σας, χρησιμοποιήστε την επίσημη εφαρμογή.',
       'official.link1': 'Πολιτική Άμυνα — Gov.cy',
@@ -95,6 +107,8 @@
       'location.error_unavailable': 'Δεν ήταν δυνατή η εύρεση της τοποθεσίας σας. Η τοποθεσία δεν είναι διαθέσιμη.',
       'location.error_timeout': 'Δεν ήταν δυνατή η εύρεση της τοποθεσίας σας. Το αίτημα έληξε.',
       'location.error_default': 'Δεν ήταν δυνατή η εύρεση της τοποθεσίας σας. Παρακαλώ δοκιμάστε ξανά.',
+      'location.try_again': 'Δοκιμάστε ξανά',
+      'location.fallback_search': 'Αναζήτηση με διεύθυνση',
       'search.prompt': 'Παρακαλώ εισάγετε διεύθυνση ή όνομα τόπου.',
       'search.no_results': 'Δεν βρέθηκαν αποτελέσματα. Δοκιμάστε άλλη διεύθυνση.',
       'search.found': 'Βρέθηκε τοποθεσία. Εμφανίζονται τα πλησιέστερα καταφύγια.',
@@ -108,6 +122,8 @@
     },
     tr: {
       'hero.title': 'En yakın sığınağı bulun',
+      'panic.title': 'Acil durum',
+      'panic.btn': 'Beni en yakın sığınağa götür',
       'action.gps.title': 'Konumumu kullan',
       'action.gps.desc': 'En yakın sığınakları bulmak için GPS konumunuzu paylaşın.',
       'action.gps.btn': 'Konumu paylaş',
@@ -120,6 +136,9 @@
       'map.legend': 'Sığınak',
       'results.title': 'En yakın sığınaklar',
       'results.close': 'Listeyi kapat',
+      'results.navigate': 'Haritalarda aç — En yakın sığınağa git',
+      'nearest.title': 'En yakın sığınağınız',
+      'nearest.navigate_walking': 'Haritalarda aç — Yürüyerek yol tarifi',
       'official.title': 'Resmi kaynaklar ve uygulama',
       'official.intro': 'Sığınak verileri İçişleri Bakanlığı\'na bağlı <strong>Kıbrıs Sivil Savunma</strong> tarafından sağlanmaktadır. Telefonunuzda en iyi deneyim için resmi uygulamayı kullanın.',
       'official.link1': 'Sivil Savunma — Gov.cy',
@@ -140,6 +159,8 @@
       'location.error_unavailable': 'Konumunuz alınamadı. Konum kullanılamıyor.',
       'location.error_timeout': 'Konumunuz alınamadı. İstek zaman aşımına uğradı.',
       'location.error_default': 'Konumunuz alınamadı. Lütfen tekrar deneyin.',
+      'location.try_again': 'Tekrar dene',
+      'location.fallback_search': 'Adresle ara',
       'search.prompt': 'Lütfen bir adres veya yer adı girin.',
       'search.no_results': 'Sonuç bulunamadı. Kıbrıs\'ta farklı bir adres veya yer deneyin.',
       'search.found': 'Konum bulundu. En yakın sığınaklar gösteriliyor.',
@@ -172,9 +193,37 @@
   const resultsPanel = $('#results-panel');
   const resultsTitle = $('#results-title');
   const resultsList = $('#results-list');
+  const resultsNearestBlock = $('#results-nearest-block');
+  const nearestShelterAddress = $('#nearest-shelter-address');
+  const nearestShelterMeta = $('#nearest-shelter-meta');
+  const resultsNavigateLink = $('#results-navigate-link');
+  const resultsErrorState = $('#results-error-state');
+  const resultsErrorMessage = $('#results-error-message');
   const btnClosePanel = $('#btn-close-panel');
+  const btnTryAgain = $('#btn-try-again');
+  const btnSearchFallback = $('#btn-search-fallback');
+  const btnPanic = $('#btn-panic');
   const searchSuggestions = $('#search-suggestions');
+  const GOOGLE_MAPS_NAV_URL = 'https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=';
+  const APPLE_MAPS_NAV_URL = 'https://maps.apple.com/?daddr=';
+  const APPLE_MAPS_WALKING = '&dirflg=w';
   const AUTCOMPLETE_DEBOUNCE_MS = 350;
+
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function isAndroid() {
+    return /Android/i.test(navigator.userAgent);
+  }
+
+  function getMapsNavUrl(lat, lon) {
+    var dest = lat + ',' + lon;
+    if (isIOS()) {
+      return APPLE_MAPS_NAV_URL + encodeURIComponent(dest) + APPLE_MAPS_WALKING;
+    }
+    return GOOGLE_MAPS_NAV_URL + encodeURIComponent(dest);
+  }
   const MIN_QUERY_LENGTH = 2;
   let autocompleteDebounceTimer = null;
   let lastSuggestionsQuery = '';
@@ -347,7 +396,22 @@
 
   function showNearest(lat, lon, title) {
     const nearest = getNearest(lat, lon);
+    if (resultsErrorState) resultsErrorState.style.display = 'none';
     resultsTitle.textContent = title || t('ui.nearest');
+    if (nearest.length > 0) {
+      const first = nearest[0];
+      if (resultsNearestBlock && nearestShelterAddress && nearestShelterMeta) {
+        nearestShelterAddress.textContent = first.address || first.id;
+        nearestShelterMeta.textContent = first.distance.toFixed(1) + ' ' + t('ui.km') + ' ' + t('ui.km_away') + ' · ' + t('ui.capacity') + ' ' + (first.capacity || '—');
+        resultsNearestBlock.style.display = 'block';
+      }
+      if (resultsNavigateLink) {
+        resultsNavigateLink.href = getMapsNavUrl(first.lat, first.lon);
+        resultsNavigateLink.textContent = t('nearest.navigate_walking');
+      }
+    } else if (resultsNearestBlock) {
+      resultsNearestBlock.style.display = 'none';
+    }
     resultsList.innerHTML = nearest.map(s => `
       <li class="result-item" data-lat="${s.lat}" data-lon="${s.lon}">
         <div class="result-address">${escapeHtml(s.address || s.id)}</div>
@@ -383,10 +447,22 @@
     btnSearch.disabled = loading;
   }
 
-  function useLocation() {
+  function showLocationErrorInPanel(message) {
+    if (resultsNearestBlock) resultsNearestBlock.style.display = 'none';
+    resultsList.innerHTML = '';
+    if (resultsErrorMessage) resultsErrorMessage.textContent = message;
+    if (resultsTitle) resultsTitle.textContent = t('results.title');
+    if (resultsErrorState) resultsErrorState.style.display = 'block';
+    resultsPanel.classList.add('is-open');
+  }
+
+  function useLocation(options) {
+    const fromPanic = options && options.fromPanic === true;
     if (!navigator.geolocation) {
-      locationStatus.textContent = t('location.geo_unsupported');
+      const msg = t('location.geo_unsupported');
+      locationStatus.textContent = msg;
       locationStatus.classList.add('error');
+      if (fromPanic) showLocationErrorInPanel(msg);
       return;
     }
     locationStatus.textContent = '';
@@ -412,6 +488,7 @@
         locationStatus.textContent = msg;
         locationStatus.classList.add('error');
         setLocationLoading(false);
+        if (fromPanic) showLocationErrorInPanel(msg);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
@@ -526,7 +603,24 @@
     resultsPanel.classList.remove('is-open');
   }
 
-  if (btnUseLocation) btnUseLocation.addEventListener('click', useLocation);
+  if (btnUseLocation) btnUseLocation.addEventListener('click', () => useLocation({}));
+  if (btnTryAgain) btnTryAgain.addEventListener('click', () => useLocation({ fromPanic: true }));
+  if (btnSearchFallback) btnSearchFallback.addEventListener('click', () => {
+    const mapSection = document.getElementById('map-section');
+    const searchCard = document.querySelector('.action-search');
+    const target = searchInput ? searchInput : (searchCard || mapSection);
+    if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (searchInput) {
+      searchInput.focus();
+    }
+  });
+  if (btnPanic) btnPanic.addEventListener('click', () => {
+    const mapSection = document.getElementById('map-section');
+    if (mapSection && mapSection.scrollIntoView) {
+      mapSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    useLocation({ fromPanic: true });
+  });
   if (btnSearch) btnSearch.addEventListener('click', searchAddress);
   if (searchInput) {
     searchInput.addEventListener('keydown', e => {

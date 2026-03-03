@@ -3,9 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Find civil defence shelters in the Republic of Cyprus. Use your location or search by address. Official data from Cyprus Civil Defence.">
+  <title>SAFE.101.CY — Find Civil Defence Shelters in Cyprus | GPS & Map</title>
+  <meta name="description" content="Find your nearest civil defence shelter in the Republic of Cyprus. Use GPS or search by address. Interactive map, 2,200+ official shelters. SafeCY app links.">
+  <meta name="keywords" content="Cyprus shelters, civil defence Cyprus, emergency shelters Cyprus, SafeCY, shelter map Cyprus, nearest shelter, Cyprus safety">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#2d5a4a">
   <link rel="canonical" href="https://safe.101.cy/">
-  <title>SAFE.101.CY — Shelters in Cyprus</title>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://safe.101.cy/">
+  <meta property="og:title" content="SAFE.101.CY — Find Civil Defence Shelters in Cyprus">
+  <meta property="og:description" content="Find your nearest civil defence shelter in Cyprus. Use GPS or search by address. Interactive map with 2,200+ official shelters.">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:site_name" content="SAFE.101.CY">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SAFE.101.CY — Find Civil Defence Shelters in Cyprus">
+  <meta name="twitter:description" content="Find your nearest civil defence shelter in Cyprus. GPS, address search, interactive map.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "SAFE.101.CY",
+    "description": "Find civil defence shelters in the Republic of Cyprus. Use GPS or search by address to see the nearest shelters on an interactive map.",
+    "url": "https://safe.101.cy/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "inLanguage": ["en", "el", "tr"],
+    "featureList": ["GPS location", "Address search", "Interactive map", "Nearest shelter finder", "Official Cyprus Civil Defence data"]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -29,6 +61,19 @@
   <main class="main">
     <section class="hero">
       <h1 data-i18n="hero.title">Find your nearest shelter</h1>
+    </section>
+
+    <section class="panic">
+      <div class="panic-card" role="region" aria-labelledby="panic-title">
+        <div class="panic-content">
+          <div class="panic-text">
+            <p id="panic-title" class="panic-title" data-i18n="panic.title">Emergency</p>
+          </div>
+          <button type="button" class="btn btn-panic" id="btn-panic" data-i18n="panic.btn" aria-label="Take me to the nearest shelter">
+            Take me to nearest shelter
+          </button>
+        </div>
+      </div>
     </section>
 
     <section class="actions">
@@ -73,7 +118,22 @@
           <h3 id="results-title" data-i18n="results.title">Nearest shelters</h3>
           <button type="button" class="btn-close-panel" id="btn-close-panel" data-i18n-aria-label="results.close" aria-label="Close list">×</button>
         </div>
-        <ul class="results-list" id="results-list"></ul>
+        <div class="results-body">
+          <div class="results-nearest-block" id="results-nearest-block" aria-labelledby="results-nearest-title" style="display: none;">
+            <h4 id="results-nearest-title" class="nearest-shelter-title" data-i18n="nearest.title">Your nearest shelter</h4>
+            <p class="nearest-shelter-address" id="nearest-shelter-address"></p>
+            <p class="nearest-shelter-meta" id="nearest-shelter-meta"></p>
+            <a id="results-navigate-link" class="btn btn-navigate-walking" href="#" target="_blank" rel="noopener noreferrer" data-i18n="nearest.navigate_walking">Open in Maps — Walking directions</a>
+          </div>
+          <div class="results-error-state" id="results-error-state" style="display: none;" aria-live="polite">
+            <p class="results-error-message" id="results-error-message"></p>
+            <div class="results-error-actions">
+              <button type="button" class="btn btn-primary btn-try-again" id="btn-try-again" data-i18n="location.try_again">Try again</button>
+              <button type="button" class="btn btn-secondary btn-search-fallback" id="btn-search-fallback" data-i18n="location.fallback_search">Search by address</button>
+            </div>
+          </div>
+          <ul class="results-list" id="results-list"></ul>
+        </div>
       </aside>
     </section>
 
