@@ -86,7 +86,7 @@
       'results.close': 'Κλείσιμο λίστας',
       'results.navigate': 'Άνοιγμα σε Χάρτες — Οδήγηση στο πλησιέστερο καταφύγιο',
       'nearest.title': 'Το πλησιέστερο καταφύγιό σας',
-      'nearest.navigate_walking': 'Άνοιγμα σε Χάρτες — Οδηγίες περπατήματος',
+      'nearest.navigate_walking': 'Άνοιγμα στους Χάρτες',
       'official.title': 'Επίσημες πηγές και εφαρμογή',
       'official.intro': 'Τα δεδομένα καταφυγών παρέχονται από την Πολιτική Άμυνα Κύπρου υπό το Υπουργείο Εσωτερικών. Για την καλύτερη εμπειρία στο κινητό σας, χρησιμοποιήστε την επίσημη εφαρμογή.',
       'official.link1': 'Πολιτική Άμυνα — Gov.cy',
@@ -98,9 +98,9 @@
       'app.android': 'Google Play',
       'contact.label': 'Τηλέφωνα επικοινωνίας: Πολιτική Άμυνα',
       'footer.peace': 'Για την ειρήνη.',
-      'footer.tagline': '— Χάρτης καταφυγίων της Κυπριακής Δημοκρατίας. Ανεπίσημη ιστοσελίδα.',
+      'footer.tagline': '— Καταφύγια Πολιτικής Άμυνας της Κυπριακής Δημοκρατίας. Ανεπίσημη ιστοσελίδα.',
       'footer.privacy': 'Αυτή η τοποθεσία δεν χρησιμοποιεί cookies και δεν συλλέγει δεδομένα.',
-      'footer.updated': 'Τελευταία ενημέρωση βάσης καταφυγών: 2 Μαρτίου 2026.',
+      'footer.updated': 'Τελευταία ενημέρωση δεδομένων: 2 Μαρτίου 2026.',
       'location.geo_unsupported': 'Η γεωτοποθεσία δεν υποστηρίζεται από το πρόγραμμα περιήγησής σας.',
       'location.found': 'Βρέθηκε τοποθεσία. Εμφανίζονται τα πλησιέστερα καταφύγια.',
       'location.error_denied': 'Δεν ήταν δυνατή η εύρεση της τοποθεσίας σας. Παρακαλώ επιτρέψτε την πρόσβαση στην τοποθεσία.',
@@ -402,7 +402,7 @@
       const first = nearest[0];
       if (resultsNearestBlock && nearestShelterAddress && nearestShelterMeta) {
         nearestShelterAddress.textContent = first.address || first.id;
-        nearestShelterMeta.textContent = first.distance.toFixed(1) + ' ' + t('ui.km') + ' ' + t('ui.km_away') + ' · ' + t('ui.capacity') + ' ' + (first.capacity || '—');
+        nearestShelterMeta.textContent = first.distance.toFixed(1) + ' ' + t('ui.km_away') + ' · ' + t('ui.capacity') + ' ' + (first.capacity || '—');
         resultsNearestBlock.style.display = 'block';
       }
       if (resultsNavigateLink) {
