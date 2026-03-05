@@ -473,6 +473,57 @@ body {
   font-size: 0.9rem;
 }
 
+/* -- Location denied browser instructions -- */
+.location-denied-help {
+  margin: 0 0 1rem;
+}
+
+.location-denied-help:empty {
+  display: none;
+}
+
+.denied-help-browser-select {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.65rem;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.denied-help-browser-select:focus {
+  border-color: var(--color-accent);
+}
+
+.denied-help-steps {
+  margin: 0;
+  padding: 0 0 0 1.3rem;
+  list-style: decimal;
+}
+
+.denied-help-steps li {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin-bottom: 0.35rem;
+  padding-left: 0.2rem;
+}
+
+.denied-help-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.denied-help-steps strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
 /* Close button */
 .btn-close-panel {
   min-width: 44px;

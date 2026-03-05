@@ -672,11 +672,132 @@
     btnSearch.disabled = loading;
   }
 
-  function showLocationErrorInPanel(message) {
+  function detectBrowser() {
+    const ua = navigator.userAgent;
+    if (/iP(hone|ad|od)/.test(ua)) return 'safari-ios';
+    if (/Safari/.test(ua) && !/Chrome/.test(ua)) return 'safari-mac';
+    if (/Firefox/.test(ua)) return 'firefox';
+    return 'chrome';
+  }
+
+  const LOCATION_INSTRUCTIONS = {
+    chrome: {
+      en: { label: 'Chrome / Edge', steps: [
+        'Click the <strong>lock icon</strong> (or ⓘ) in the address bar',
+        'Click <strong>Location</strong>',
+        'Select <strong>Allow</strong>',
+        'Tap <strong>Try again</strong> below',
+      ]},
+      el: { label: 'Chrome / Edge', steps: [
+        'Κάντε κλικ στο <strong>εικονίδιο κλειδώματος</strong> (ή ⓘ) στη γραμμή διεύθυνσης',
+        'Κάντε κλικ στο <strong>Τοποθεσία</strong>',
+        'Επιλέξτε <strong>Να επιτρέπεται</strong>',
+        'Πατήστε <strong>Δοκιμάστε ξανά</strong> παρακάτω',
+      ]},
+      tr: { label: 'Chrome / Edge', steps: [
+        'Adres çubuğundaki <strong>kilit simgesine</strong> (veya ⓘ) tıklayın',
+        '<strong>Konum</strong>\'a tıklayın',
+        '<strong>İzin ver</strong>\'i seçin',
+        'Aşağıdan <strong>Tekrar dene</strong>\'ye dokunun',
+      ]},
+    },
+    'safari-ios': {
+      en: { label: 'Safari (iPhone / iPad)', steps: [
+        'Open the <strong>Settings</strong> app',
+        'Tap <strong>Privacy & Security</strong>',
+        'Tap <strong>Location Services</strong>',
+        'Tap <strong>Safari Websites</strong>',
+        'Select <strong>While Using the App</strong>',
+        'Return here and tap <strong>Try again</strong>',
+      ]},
+      el: { label: 'Safari (iPhone / iPad)', steps: [
+        'Ανοίξτε την εφαρμογή <strong>Ρυθμίσεις</strong>',
+        'Πατήστε <strong>Απόρρητο & Ασφάλεια</strong>',
+        'Πατήστε <strong>Υπηρεσίες τοποθεσίας</strong>',
+        'Πατήστε <strong>Ιστοτόποι Safari</strong>',
+        'Επιλέξτε <strong>Κατά τη χρήση</strong>',
+        'Επιστρέψτε εδώ και πατήστε <strong>Δοκιμάστε ξανά</strong>',
+      ]},
+      tr: { label: 'Safari (iPhone / iPad)', steps: [
+        '<strong>Ayarlar</strong> uygulamasını açın',
+        '<strong>Gizlilik ve Güvenlik</strong>\'e dokunun',
+        '<strong>Konum Servisleri</strong>\'ne dokunun',
+        '<strong>Safari Web Siteleri</strong>\'ne dokunun',
+        '<strong>Uygulamayı Kullanırken</strong>\'i seçin',
+        'Buraya dönün ve <strong>Tekrar dene</strong>\'ye dokunun',
+      ]},
+    },
+    'safari-mac': {
+      en: { label: 'Safari (Mac)', steps: [
+        'In the menu bar click <strong>Safari → Settings for This Website…</strong>',
+        'Next to <strong>Location</strong> select <strong>Allow</strong>',
+        'Tap <strong>Try again</strong> below',
+      ]},
+      el: { label: 'Safari (Mac)', steps: [
+        'Στη γραμμή μενού επιλέξτε <strong>Safari → Ρυθμίσεις για αυτόν τον ιστότοπο…</strong>',
+        'Δίπλα στο <strong>Τοποθεσία</strong> επιλέξτε <strong>Να επιτρέπεται</strong>',
+        'Πατήστε <strong>Δοκιμάστε ξανά</strong> παρακάτω',
+      ]},
+      tr: { label: 'Safari (Mac)', steps: [
+        'Menü çubuğunda <strong>Safari → Bu Web Sitesi için Ayarlar…</strong>\'a tıklayın',
+        '<strong>Konum</strong>\'un yanında <strong>İzin Ver</strong>\'i seçin',
+        'Aşağıdan <strong>Tekrar dene</strong>\'ye dokunun',
+      ]},
+    },
+    firefox: {
+      en: { label: 'Firefox', steps: [
+        'Click the <strong>lock icon</strong> in the address bar',
+        'Click <strong>Connection Secure → More Information</strong>',
+        'Open the <strong>Permissions</strong> tab',
+        'Next to <strong>Access Your Location</strong> uncheck <strong>Block</strong>',
+        'Tap <strong>Try again</strong> below',
+      ]},
+      el: { label: 'Firefox', steps: [
+        'Κάντε κλικ στο <strong>εικονίδιο κλειδώματος</strong> στη γραμμή διεύθυνσης',
+        'Κάντε κλικ στο <strong>Ασφαλής σύνδεση → Περισσότερες πληροφορίες</strong>',
+        'Ανοίξτε την καρτέλα <strong>Δικαιώματα</strong>',
+        'Δίπλα στο <strong>Πρόσβαση στην τοποθεσία σας</strong> αποεπιλέξτε <strong>Αποκλεισμός</strong>',
+        'Πατήστε <strong>Δοκιμάστε ξανά</strong> παρακάτω',
+      ]},
+      tr: { label: 'Firefox', steps: [
+        'Adres çubuğundaki <strong>kilit simgesine</strong> tıklayın',
+        '<strong>Bağlantı Güvenli → Daha Fazla Bilgi</strong>\'ye tıklayın',
+        '<strong>İzinler</strong> sekmesini açın',
+        '<strong>Konumunuza Erişim</strong> yanında <strong>Engelle</strong>\'nin işaretini kaldırın',
+        'Aşağıdan <strong>Tekrar dene</strong>\'ye dokunun',
+      ]},
+    },
+  };
+
+  function renderDeniedHelp(selectedBrowser) {
+    const helpEl = $('#location-denied-help');
+    if (!helpEl) return;
+    const lang = currentLang in { en: 1, el: 1, tr: 1 } ? currentLang : 'en';
+    const options = Object.entries(LOCATION_INSTRUCTIONS).map(([key, val]) => {
+      const label = val[lang]?.label || val.en.label;
+      const selected = key === selectedBrowser ? ' selected' : '';
+      return `<option value="${key}"${selected}>${label}</option>`;
+    }).join('');
+    const instr = LOCATION_INSTRUCTIONS[selectedBrowser]?.[lang] || LOCATION_INSTRUCTIONS[selectedBrowser]?.en;
+    const steps = (instr?.steps || []).map(s => `<li>${s}</li>`).join('');
+    helpEl.innerHTML = `
+      <select class="denied-help-browser-select" aria-label="Select browser">
+        ${options}
+      </select>
+      <ol class="denied-help-steps">${steps}</ol>`;
+    helpEl.querySelector('.denied-help-browser-select').addEventListener('change', e => {
+      renderDeniedHelp(e.target.value);
+    });
+  }
+
+  function showLocationErrorInPanel(message, isDenied) {
     if (resultsNearestBlock) resultsNearestBlock.style.display = 'none';
     resultsList.innerHTML = '';
     if (resultsErrorMessage) resultsErrorMessage.textContent = message;
     if (resultsTitle) resultsTitle.textContent = t('results.title');
+    const helpEl = $('#location-denied-help');
+    if (helpEl) helpEl.innerHTML = '';
+    if (isDenied) renderDeniedHelp(detectBrowser());
     if (resultsErrorState) resultsErrorState.style.display = 'block';
     resultsPanel.classList.add('is-open');
   }
@@ -752,7 +873,7 @@
         }
         if (locationStatus) locationStatus.textContent = msg;
         setLocationLoading(false);
-        showLocationErrorInPanel(msg);
+        showLocationErrorInPanel(msg, err.code === err.PERMISSION_DENIED);
         stopGpsWatch();
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
