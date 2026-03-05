@@ -694,36 +694,49 @@ body {
   border-color: var(--color-accent);
 }
 
-.contact-note {
-  font-size: 0.88rem;
-  color: var(--color-text);
-  margin: 1rem 0 0;
-  padding: 0.8rem;
+/* Emergency contact inline (within official sources section) */
+.emergency-contact-inline {
+  margin: 1.2rem 0 1.5rem;
+  padding: 1rem;
   background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-left: 3px solid var(--color-accent);
   border-radius: var(--radius-sm);
-  line-height: 1.5;
 }
 
-.contact-note span {
-  display: block;
-  font-weight: 600;
-  color: var(--color-accent);
-  margin-bottom: 0.3rem;
+.emergency-contact-label {
+  margin: 0 0 0.6rem;
   font-size: 0.8rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.contact-note a {
-  color: var(--color-text);
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.contact-note a:hover {
+  letter-spacing: 0.06em;
   color: var(--color-accent);
+}
+
+.emergency-contact-phones {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.phone-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.emergency-phone {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.emergency-phone:hover {
+  color: var(--color-text);
+  text-decoration: underline;
 }
 
 /* Info footer inside drawer */
