@@ -122,7 +122,7 @@ body {
 /* Topbar icon buttons */
 .btn-topbar-icon {
   flex-shrink: 0;
-  width: 38px;
+  min-width: 38px;
   height: 38px;
   display: flex;
   align-items: center;
@@ -170,13 +170,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  display: none;
-}
-
-@media (min-width: 640px) {
-  .btn-label {
-    display: inline;
-  }
+  display: inline;
 }
 
 .topbar-right {
@@ -383,6 +377,12 @@ body {
   padding: 1rem 1.25rem;
   background: #fff4f2;
   border-bottom: 1px solid #f3b1a8;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.results-nearest-block:hover {
+  background: #fde8e5;
 }
 
 .results-nearest-block .nearest-shelter-title {
@@ -871,12 +871,12 @@ body {
   }
 
   .btn-topbar-icon {
-    width: 40px;
+    min-width: 40px;
     height: 40px;
   }
 
   .btn-locate {
-    width: 40px;
+    min-width: 40px;
     height: 40px;
   }
 

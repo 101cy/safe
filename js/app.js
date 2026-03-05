@@ -453,6 +453,8 @@
       if (resultsNearestBlock && nearestShelterAddress && nearestShelterMeta) {
         nearestShelterAddress.textContent = first.address || first.id;
         nearestShelterMeta.textContent = first.distance.toFixed(1) + ' ' + t('ui.km_away') + ' · ' + t('ui.capacity') + ' ' + (first.capacity || '—');
+        resultsNearestBlock.dataset.lat = first.lat;
+        resultsNearestBlock.dataset.lon = first.lon;
         resultsNearestBlock.style.display = 'block';
       }
       if (resultsNavigateLink) {
@@ -501,6 +503,34 @@
         }
       });
     });
+
+    if (resultsNearestBlock) {
+      resultsNearestBlock.onclick = e => {
+        if (e.target.closest('a')) return; // let the navigate link open normally
+        const nLat = parseFloat(resultsNearestBlock.dataset.lat);
+        const nLon = parseFloat(resultsNearestBlock.dataset.lon);
+        const zoom = 17;
+        if (window.innerWidth < 769 && resultsPanel.classList.contains('is-open')) {
+          const topbarEl = document.querySelector('.topbar');
+          const topPad = topbarEl ? topbarEl.getBoundingClientRect().bottom : 60;
+          const btmPad = resultsPanel.getBoundingClientRect().height;
+          const LL = L.latLng(nLat, nLon);
+          map.fitBounds(L.latLngBounds([LL, LL]), {
+            paddingTopLeft:     [0, topPad],
+            paddingBottomRight: [0, btmPad],
+            maxZoom: zoom,
+            animate: true
+          });
+        } else {
+          map.setView([nLat, nLon], zoom);
+        }
+        const s = shelters.find(x => x.lat === nLat && x.lon === nLon && x.distance != null);
+        if (s) {
+          const marker = shelterMarkersById[s.id];
+          if (marker && marker.bindPopup) marker.bindPopup(popupContent(s), { autoPan: false }).openPopup();
+        }
+      };
+    }
 
     resultsPanel.classList.add('is-open');
     addUserMarker(lat, lon);
