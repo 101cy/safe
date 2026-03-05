@@ -142,8 +142,8 @@ body {
 }
 
 .btn-locate {
-  color: var(--color-accent);
-  background: var(--color-accent-soft);
+  color: #1a73e8;
+  background: #e8f0fe;
   gap: 0.35rem;
   padding: 0 0.65rem;
   width: auto;
@@ -151,8 +151,8 @@ body {
 }
 
 .btn-locate:hover {
-  background: #dce8e2;
-  color: var(--color-accent);
+  background: #d2e3fc;
+  color: #1558b0;
   border-color: transparent;
 }
 
