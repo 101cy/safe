@@ -459,7 +459,8 @@
     map = L.map('map', {
       center: CYPRUS_CENTER,
       zoom: CYPRUS_ZOOM,
-      scrollWheelZoom: true
+      scrollWheelZoom: true,
+      zoomControl: false, // Hide zoom buttons
     });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
