@@ -196,6 +196,11 @@
   let shelterLayer = null;
   let userMarker = null;
   let shelterMarkersById = {};   // keyed by "lat,lon" to avoid duplicate-ID collisions
+  let gpsWatchId = null;
+  const shelterCache = {};       // lazy-loaded shelter data keyed by lang
+  let lastNearestLat = null;
+  let lastNearestLon = null;
+  let lastNearestTitle = null;
 
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
@@ -328,6 +333,11 @@
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-pressed', isActive);
     });
+    // Lazy-load shelter data for this language, then update marker refs and panel text
+    loadShelters(lang).then(() => {
+      updateMarkerShelterRefs();
+      refreshResultsPanel();
+    });
   }
 
   function haversineKm(lat1, lon1, lat2, lon2) {
@@ -357,6 +367,10 @@
 
   function loadShelters(lang) {
     const l = lang || currentLang;
+    if (shelterCache[l]) {
+      shelters = shelterCache[l];
+      return Promise.resolve(shelters);
+    }
     const file = l === 'el' ? 'shelters_full_el.json' : 'shelters_full_en.json';
     return fetch(file)
       .then(r => {
@@ -364,9 +378,58 @@
         return r.json();
       })
       .then(data => {
-        shelters = (data && data.shelters) ? data.shelters : [];
+        shelterCache[l] = (data && data.shelters) ? data.shelters : [];
+        shelters = shelterCache[l];
         return shelters;
       });
+  }
+
+  // Update each marker's shelter reference to match the current language data
+  function updateMarkerShelterRefs() {
+    const byCoord = {};
+    shelters.forEach(s => { byCoord[`${s.lat},${s.lon}`] = s; });
+    Object.entries(shelterMarkersById).forEach(([key, m]) => {
+      if (byCoord[key]) m.shelter = byCoord[key];
+    });
+  }
+
+  // Re-render results panel text for the last known location without touching the map
+  function refreshResultsPanel() {
+    if (lastNearestLat !== null && resultsPanel.classList.contains('is-open')) {
+      const nearest = getNearest(lastNearestLat, lastNearestLon);
+      if (nearest.length > 0) {
+        const first = nearest[0];
+        if (nearestShelterAddress) nearestShelterAddress.textContent = first.address || first.id;
+        if (nearestShelterMeta) nearestShelterMeta.textContent = first.distance.toFixed(1) + ' ' + t('ui.km_away') + ' · ' + t('ui.capacity') + ' ' + (first.capacity || '—');
+      }
+      const nearestLat = nearest.length > 0 ? nearest[0].lat : null;
+      const nearestLon = nearest.length > 0 ? nearest[0].lon : null;
+      resultsList.innerHTML = nearest.slice(1).filter(s => !(s.lat === nearestLat && s.lon === nearestLon)).map(s => `
+        <li class="result-item" data-lat="${s.lat}" data-lon="${s.lon}">
+          <div class="result-address">${escapeHtml(s.address || s.id)}</div>
+          <div class="result-meta">${s.distance.toFixed(1)} ${t('ui.km')} · ${t('ui.capacity')} ${escapeHtml(String(s.capacity))} · ${escapeHtml(s.district || '')}</div>
+        </li>
+      `).join('');
+      // Re-attach click handlers to new list items
+      $$('.result-item', resultsList).forEach(el => {
+        el.addEventListener('click', () => {
+          const lat = parseFloat(el.dataset.lat);
+          const lon = parseFloat(el.dataset.lon);
+          const zoom = 17;
+          if (window.innerWidth < 769 && resultsPanel.classList.contains('is-open')) {
+            const topbarEl = document.querySelector('.topbar');
+            const topPad = topbarEl ? topbarEl.getBoundingClientRect().bottom : 60;
+            const btmPad = resultsPanel.getBoundingClientRect().height;
+            const LL = L.latLng(lat, lon);
+            map.fitBounds(L.latLngBounds([LL, LL]), { paddingTopLeft: [0, topPad], paddingBottomRight: [0, btmPad], maxZoom: zoom, animate: true });
+          } else {
+            map.setView([lat, lon], zoom);
+          }
+          const marker = shelterMarkersById[`${lat},${lon}`];
+          if (marker && marker.bindPopup) marker.bindPopup(popupContent(marker.shelter), { autoPan: false }).openPopup();
+        });
+      });
+    }
   }
 
   function initMap() {
@@ -398,6 +461,7 @@
   }
 
   function viewAllShelters() {
+    stopGpsWatch();
     clearUserMarker();
     clearAllSheltersLayer();
     shelterMarkersById = {};
@@ -455,6 +519,9 @@
   }
 
   function showNearest(lat, lon, title) {
+    lastNearestLat = lat;
+    lastNearestLon = lon;
+    lastNearestTitle = title;
     const nearest = getNearest(lat, lon);
     if (resultsErrorState) resultsErrorState.style.display = 'none';
     resultsTitle.textContent = title || t('ui.nearest');
@@ -615,12 +682,15 @@
     if (locationStatus) locationStatus.textContent = '';
     setLocationLoading(true);
 
-    navigator.geolocation.getCurrentPosition(
+    // Start watching position (live GPS tracking)
+    gpsWatchId = navigator.geolocation.watchPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
         showNearest(latitude, longitude, t('ui.shelters_near'));
         if (locationStatus) locationStatus.textContent = t('location.found');
         setLocationLoading(false);
+        // Add pulsing animation to indicate active tracking
+        if (btnLocate) btnLocate.classList.add('is-loading');
       },
       err => {
         let msg;
@@ -633,9 +703,18 @@
         if (locationStatus) locationStatus.textContent = msg;
         setLocationLoading(false);
         showLocationErrorInPanel(msg);
+        stopGpsWatch();
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
+  }
+
+  function stopGpsWatch() {
+    if (gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+      if (btnLocate) btnLocate.classList.remove('is-loading');
+    }
   }
 
   function geocode(query) {
@@ -719,6 +798,7 @@
   }
 
   function searchAddress() {
+    stopGpsWatch();
     const q = (searchInput && searchInput.value || '').trim();
     if (!q) return;
     if (searchStatus) searchStatus.textContent = '';
@@ -745,6 +825,7 @@
 
   function closeResultsPanel() {
     resultsPanel.classList.remove('is-open');
+    stopGpsWatch();
   }
 
   if (btnLocate) btnLocate.addEventListener('click', useLocation);
