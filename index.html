@@ -51,10 +51,39 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="/" class="logo">SAFE<span class="logo-dot">.101.CY</span></a>
-      <nav class="lang-nav" aria-label="Language">
+
+  <!-- Full-screen map -->
+  <div id="map" class="map" role="application" aria-label="Map of shelters in Cyprus"></div>
+
+  <!-- Floating top bar -->
+  <header class="topbar">
+    <a href="/" class="logo">SAFE<span class="logo-dot">.101.CY</span></a>
+
+    <div class="topbar-search">
+      <div class="search-autocomplete-wrap">
+        <input type="search" id="search-input" class="search-input"
+               placeholder="e.g. Nicosia, Limassol, 1016" autocomplete="off"
+               data-i18n-placeholder="action.search.placeholder"
+               aria-label="Address or place search"
+               aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggestions">
+        <ul class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Address suggestions"></ul>
+      </div>
+      <button type="button" class="btn-topbar-icon btn-locate" id="btn-locate" aria-label="Use my location" title="GPS">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+        </svg>
+        <span class="btn-label">GPS</span>
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <button type="button" class="btn-topbar-icon" id="btn-info-toggle" aria-label="About &amp; official sources">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+        </svg>
+      </button>
+      <!-- Desktop-only language switcher; mobile users access via info drawer -->
+      <nav class="lang-nav topbar-lang" aria-label="Language">
         <button type="button" class="lang-btn is-active" data-lang="en" aria-pressed="true">EN</button>
         <span class="lang-sep" aria-hidden="true">/</span>
         <button type="button" class="lang-btn" data-lang="el" aria-pressed="false">ΕΛ</button>
@@ -64,92 +93,65 @@
     </div>
   </header>
 
-  <main class="main">
-    <section class="hero">
-      <h1 data-i18n="hero.title">Find your nearest shelter</h1>
-    </section>
+  <!-- Emergency FAB -->
+  <button type="button" class="btn-emergency" id="btn-panic" aria-label="Take me to the nearest shelter">
+    <svg class="btn-emergency-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <span data-i18n="panic.btn">Take me to nearest shelter</span>
+  </button>
 
-    <section class="panic">
-      <div class="panic-card" role="region" aria-labelledby="panic-title">
-        <div class="panic-content">
-          <div class="panic-text">
-            <p id="panic-title" class="panic-title" data-i18n="panic.title">Emergency</p>
-          </div>
-          <button type="button" class="btn btn-panic" id="btn-panic" data-i18n="panic.btn" aria-label="Take me to the nearest shelter">
-            Take me to nearest shelter
-          </button>
+  <!-- Results panel (bottom sheet on mobile, side panel on desktop) -->
+  <aside class="results-panel" id="results-panel" aria-label="Nearest shelters list">
+    <div class="results-handle" aria-hidden="true"></div>
+    <div class="results-header">
+      <h3 id="results-title" data-i18n="results.title">Nearest shelters</h3>
+      <button type="button" class="btn-close-panel" id="btn-close-panel" data-i18n-aria-label="results.close" aria-label="Close list">×</button>
+    </div>
+    <div class="results-body">
+      <div class="results-nearest-block" id="results-nearest-block" aria-labelledby="results-nearest-title" style="display: none;">
+        <h4 id="results-nearest-title" class="nearest-shelter-title" data-i18n="nearest.title">Your nearest shelter</h4>
+        <p class="nearest-shelter-address" id="nearest-shelter-address"></p>
+        <p class="nearest-shelter-meta" id="nearest-shelter-meta"></p>
+        <a id="results-navigate-link" class="btn btn-navigate-walking" href="#" target="_blank" rel="noopener noreferrer" data-i18n="nearest.navigate_google">Open in Google Maps</a>
+      </div>
+      <div class="results-error-state" id="results-error-state" style="display: none;" aria-live="polite">
+        <p class="results-error-message" id="results-error-message"></p>
+        <div class="results-error-actions">
+          <button type="button" class="btn btn-primary btn-try-again" id="btn-try-again" data-i18n="location.try_again">Try again</button>
+          <button type="button" class="btn btn-secondary btn-search-fallback" id="btn-search-fallback" data-i18n="location.fallback_search">Search by address</button>
         </div>
       </div>
-    </section>
+      <ul class="results-list" id="results-list"></ul>
+    </div>
+  </aside>
 
-    <section class="actions">
-      <div class="action-card action-gps">
-        <div class="action-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
-        <h2 data-i18n="action.gps.title">Use my location</h2>
-        <p data-i18n="action.gps.desc">Share your GPS position to find the closest shelters.</p>
-        <button type="button" class="btn btn-primary" id="btn-use-location" aria-label="Use my current location">
-          <span class="btn-text" data-i18n="action.gps.btn">Share location</span>
-          <span class="btn-loading" aria-hidden="true" data-i18n="action.gps.loading">Locating…</span>
-        </button>
-        <p class="action-hint" id="location-status"></p>
-      </div>
+  <!-- Info drawer backdrop -->
+  <div class="info-overlay" id="info-overlay" aria-hidden="true"></div>
 
-      <div class="action-card action-search">
-        <div class="action-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        </div>
-        <h2 data-i18n="action.search.title">Search by address or place</h2>
-        <p data-i18n="action.search.desc">Enter an address, postal code, or point of interest in Cyprus.</p>
-        <div class="search-wrap">
-          <div class="search-autocomplete-wrap">
-            <input type="search" id="search-input" class="search-input" placeholder="e.g. Nicosia, Limassol, 1016" autocomplete="off" data-i18n-placeholder="action.search.placeholder" aria-label="Address or place search" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggestions">
-            <ul class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Address suggestions"></ul>
-          </div>
-          <button type="button" class="btn btn-secondary" id="btn-search" data-i18n="action.search.btn" aria-label="Search">Search</button>
-        </div>
-        <p class="action-hint" id="search-status"></p>
-      </div>
-    </section>
-
-    <section class="map-section" id="map-section">
-      <div class="map-header">
-        <h2 data-i18n="map.title">Map</h2>
-        <p class="map-legend"><span class="legend-marker"></span> <span data-i18n="map.legend">Shelter</span></p>
-      </div>
-      <div id="map" class="map" role="application" aria-label="Map of shelters in Cyprus"></div>
-      <aside class="results-panel" id="results-panel" aria-label="Nearest shelters list">
-        <div class="results-header">
-          <h3 id="results-title" data-i18n="results.title">Nearest shelters</h3>
-          <button type="button" class="btn-close-panel" id="btn-close-panel" data-i18n-aria-label="results.close" aria-label="Close list">×</button>
-        </div>
-        <div class="results-body">
-          <div class="results-nearest-block" id="results-nearest-block" aria-labelledby="results-nearest-title" style="display: none;">
-            <h4 id="results-nearest-title" class="nearest-shelter-title" data-i18n="nearest.title">Your nearest shelter</h4>
-            <p class="nearest-shelter-address" id="nearest-shelter-address"></p>
-            <p class="nearest-shelter-meta" id="nearest-shelter-meta"></p>
-            <a id="results-navigate-link" class="btn btn-navigate-walking" href="#" target="_blank" rel="noopener noreferrer" data-i18n="nearest.navigate_google">Open in Google Maps</a>
-          </div>
-          <div class="results-error-state" id="results-error-state" style="display: none;" aria-live="polite">
-            <p class="results-error-message" id="results-error-message"></p>
-            <div class="results-error-actions">
-              <button type="button" class="btn btn-primary btn-try-again" id="btn-try-again" data-i18n="location.try_again">Try again</button>
-              <button type="button" class="btn btn-secondary btn-search-fallback" id="btn-search-fallback" data-i18n="location.fallback_search">Search by address</button>
-            </div>
-          </div>
-          <ul class="results-list" id="results-list"></ul>
-        </div>
-      </aside>
-    </section>
-
-    <section class="official section-inner">
+  <!-- Info drawer -->
+  <aside class="info-drawer" id="info-drawer" role="complementary" aria-label="About and official sources">
+    <div class="info-drawer-header">
       <h2 data-i18n="official.title">Official sources &amp; app</h2>
+      <button type="button" class="btn-close-panel" id="btn-close-info" aria-label="Close">×</button>
+    </div>
+    <div class="info-drawer-body">
+      <!-- Language switcher — visible on mobile only -->
+      <nav class="lang-nav drawer-lang" aria-label="Language">
+        <button type="button" class="lang-btn is-active" data-lang="en" aria-pressed="true">EN</button>
+        <span class="lang-sep" aria-hidden="true">/</span>
+        <button type="button" class="lang-btn" data-lang="el" aria-pressed="false">ΕΛ</button>
+        <span class="lang-sep" aria-hidden="true">/</span>
+        <button type="button" class="lang-btn" data-lang="tr" aria-pressed="false">TR</button>
+      </nav>
+
       <p data-i18n="official.intro">Shelter data is provided by the <strong>Cyprus Civil Defence</strong> under the Ministry of Interior. For the best experience on your phone, use the official app.</p>
       <ul class="official-links">
         <li><a href="https://www.gov.cy/moi/en/civil-defense/" target="_blank" rel="noopener noreferrer" data-i18n="official.link1">Civil Defence — Gov.cy</a></li>
         <li><a href="https://www.moi.gov.cy/moi/cd/cd.nsf/home_en/home_en?openform" target="_blank" rel="noopener noreferrer" data-i18n="official.link2">Civil Defence Department — Ministry of Interior</a></li>
       </ul>
+
       <div class="app-download">
         <p class="app-title" data-i18n="app.title">SafeCY — Official app</p>
         <p class="app-desc" data-i18n="app.desc">Find shelters by GPS, address or postal code. Available in Greek and English. Free on Android and iOS.</p>
@@ -158,23 +160,24 @@
           <a href="https://play.google.com/store/apps/details?id=com.moi.safecy" target="_blank" rel="noopener noreferrer" class="app-badge app-badge-android" data-i18n="app.android" aria-label="Get SafeCY on Google Play">Google Play</a>
         </div>
       </div>
-      <p class="contact-note"><span data-i18n="contact.label">Emergency contact: Civil Defence</span> <a href="tel:22403450">22403450</a> / <a href="tel:22403452">22403452</a></p>
-    </section>
-  </main>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <p class="footer-peace" data-i18n="footer.peace">We stand for peace.</p>
-      <div class="footer-grid">
+      <p class="contact-note"><span data-i18n="contact.label">Emergency contact: Civil Defence</span> <a href="tel:22403450">22403450</a> / <a href="tel:22403452">22403452</a></p>
+
+      <div class="info-footer">
+        <p class="footer-peace" data-i18n="footer.peace">We stand for peace.</p>
         <p class="footer-brand"><a href="/">SAFE.101.CY</a> <span data-i18n="footer.tagline">— Shelter finder for the Republic of Cyprus. Not an official government site.</span></p>
         <p class="footer-meta">
-          <span class="footer-privacy" data-i18n="footer.privacy">This site does not use cookies and does not collect data.</span>
+          <span data-i18n="footer.privacy">This site does not use cookies and does not collect data.</span>
           <span class="footer-sep"> · </span>
-          <span class="footer-updated" data-i18n="footer.updated">Shelter database last updated: March 2, 2026.</span>
+          <span data-i18n="footer.updated">Shelter database last updated: March 2, 2026.</span>
         </p>
       </div>
     </div>
-  </footer>
+  </aside>
+
+  <!-- Accessibility live regions -->
+  <p id="location-status" class="sr-only" aria-live="polite"></p>
+  <p id="search-status" class="sr-only" aria-live="polite"></p>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="js/app.js"></script>

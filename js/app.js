@@ -177,7 +177,14 @@
     }
   };
 
-  let currentLang = (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_LANG_KEY)) || 'en';
+  function getBrowserLanguage() {
+    const browserLang = (navigator.language || navigator.userLanguage || '').split('-')[0].toLowerCase();
+    if (browserLang === 'el') return 'el';
+    if (browserLang === 'tr') return 'tr';
+    return 'en';
+  }
+
+  let currentLang = getBrowserLanguage();
   let shelters = [];
   let map = null;
   let shelterLayer = null;
@@ -187,10 +194,9 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-  const btnUseLocation = $('#btn-use-location');
+  const btnLocate = $('#btn-locate');
   const locationStatus = $('#location-status');
   const searchInput = $('#search-input');
-  const btnSearch = $('#btn-search');
   const searchStatus = $('#search-status');
   const mapEl = $('#map');
   const resultsPanel = $('#results-panel');
@@ -207,6 +213,10 @@
   const btnSearchFallback = $('#btn-search-fallback');
   const btnPanic = $('#btn-panic');
   const searchSuggestions = $('#search-suggestions');
+  const btnInfoToggle = $('#btn-info-toggle');
+  const btnCloseInfo = $('#btn-close-info');
+  const infoDrawer = $('#info-drawer');
+  const infoOverlay = $('#info-overlay');
   const GOOGLE_MAPS_NAV_URL = 'https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=';
   const APPLE_MAPS_NAV_URL = 'https://maps.apple.com/?daddr=';
   const APPLE_MAPS_WALKING = '&dirflg=w';
@@ -306,16 +316,12 @@
   function setLanguage(lang) {
     if (lang !== 'en' && lang !== 'el' && lang !== 'tr') return;
     currentLang = lang;
-    try { localStorage.setItem(STORAGE_LANG_KEY, lang); } catch (e) {}
     applyTranslations();
     $$('.lang-btn').forEach(btn => {
       const isActive = btn.getAttribute('data-lang') === lang;
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-pressed', isActive);
     });
-    loadShelters(lang).then(() => {
-      if (map && shelterLayer) viewAllShelters();
-    }).catch(() => {});
   }
 
   function haversineKm(lat1, lon1, lat2, lon2) {
@@ -457,7 +463,7 @@
     } else if (resultsNearestBlock) {
       resultsNearestBlock.style.display = 'none';
     }
-    resultsList.innerHTML = nearest.map(s => `
+    resultsList.innerHTML = nearest.slice(1).map(s => `
       <li class="result-item" data-lat="${s.lat}" data-lon="${s.lon}">
         <div class="result-address">${escapeHtml(s.address || s.id)}</div>
         <div class="result-meta">${s.distance.toFixed(1)} ${t('ui.km')} · ${t('ui.capacity')} ${escapeHtml(String(s.capacity))} · ${escapeHtml(s.district || '')}</div>
@@ -468,11 +474,30 @@
       el.addEventListener('click', () => {
         const lat = parseFloat(el.dataset.lat);
         const lon = parseFloat(el.dataset.lon);
-        map.setView([lat, lon], 17);
-        const s = nearest.find(x => x.lat === lat && x.lon === lon);
+        const zoom = 17;
+
+        if (window.innerWidth < 769 && resultsPanel.classList.contains('is-open')) {
+          // Use fitBounds with padding so Leaflet natively accounts for the topbar and
+          // the results panel — single atomic call, no autopan interference.
+          const topbarEl = document.querySelector('.topbar');
+          const topPad = topbarEl ? topbarEl.getBoundingClientRect().bottom : 60;
+          const btmPad = resultsPanel.getBoundingClientRect().height;
+          const LL = L.latLng(lat, lon);
+          map.fitBounds(L.latLngBounds([LL, LL]), {
+            paddingTopLeft:     [0, topPad],
+            paddingBottomRight: [0, btmPad],
+            maxZoom: zoom,
+            animate: true
+          });
+        } else {
+          map.setView([lat, lon], zoom);
+        }
+
+        const s = shelters.find(x => x.lat === lat && x.lon === lon && x.distance != null);
         if (s) {
           const marker = shelterMarkersById[s.id];
-          if (marker && marker.bindPopup) marker.bindPopup(popupContent(s)).openPopup();
+          // autoPan: false prevents Leaflet from re-panning after we set the view
+          if (marker && marker.bindPopup) marker.bindPopup(popupContent(s), { autoPan: false }).openPopup();
         }
       });
     });
@@ -482,12 +507,13 @@
   }
 
   function setLocationLoading(loading) {
-    if (!btnUseLocation) return;
-    btnUseLocation.disabled = loading;
-    btnUseLocation.classList.toggle('is-loading', loading);
+    if (!btnLocate) return;
+    btnLocate.disabled = loading;
+    btnLocate.classList.toggle('is-loading', loading);
   }
 
   function setSearchLoading(loading) {
+    const btnSearch = $('#btn-search');
     if (!btnSearch) return;
     btnSearch.disabled = loading;
   }
@@ -501,25 +527,37 @@
     resultsPanel.classList.add('is-open');
   }
 
-  function useLocation(options) {
-    const fromPanic = options && options.fromPanic === true;
+  function openInfoDrawer() {
+    if (infoDrawer) infoDrawer.classList.add('is-open');
+    if (infoOverlay) {
+      infoOverlay.classList.add('is-visible');
+      infoOverlay.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeInfoDrawer() {
+    if (infoDrawer) infoDrawer.classList.remove('is-open');
+    if (infoOverlay) {
+      infoOverlay.classList.remove('is-visible');
+      infoOverlay.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function useLocation() {
     if (!navigator.geolocation) {
       const msg = t('location.geo_unsupported');
-      locationStatus.textContent = msg;
-      locationStatus.classList.add('error');
-      if (fromPanic) showLocationErrorInPanel(msg);
+      if (locationStatus) locationStatus.textContent = msg;
+      showLocationErrorInPanel(msg);
       return;
     }
-    locationStatus.textContent = '';
-    locationStatus.classList.remove('success', 'error');
+    if (locationStatus) locationStatus.textContent = '';
     setLocationLoading(true);
 
     navigator.geolocation.getCurrentPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
         showNearest(latitude, longitude, t('ui.shelters_near'));
-        locationStatus.textContent = t('location.found');
-        locationStatus.classList.add('success');
+        if (locationStatus) locationStatus.textContent = t('location.found');
         setLocationLoading(false);
       },
       err => {
@@ -530,10 +568,9 @@
           case err.TIMEOUT: msg = t('location.error_timeout'); break;
           default: msg = t('location.error_default');
         }
-        locationStatus.textContent = msg;
-        locationStatus.classList.add('error');
+        if (locationStatus) locationStatus.textContent = msg;
         setLocationLoading(false);
-        if (fromPanic) showLocationErrorInPanel(msg);
+        showLocationErrorInPanel(msg);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
@@ -616,31 +653,28 @@
   function searchAddress() {
     const q = (searchInput && searchInput.value || '').trim();
     if (!q) {
-      searchStatus.textContent = t('search.prompt');
-      searchStatus.classList.add('error');
+      if (searchStatus) searchStatus.textContent = t('search.prompt');
       return;
     }
-    searchStatus.textContent = '';
-    searchStatus.classList.remove('success', 'error');
+    if (searchStatus) searchStatus.textContent = '';
     setSearchLoading(true);
 
     geocode(q).then(results => {
       setSearchLoading(false);
       if (!results || results.length === 0) {
-        searchStatus.textContent = t('search.no_results');
-        searchStatus.classList.add('error');
+        if (searchStatus) searchStatus.textContent = t('search.no_results');
+        showLocationErrorInPanel(t('search.no_results'));
         return;
       }
       const { lat, lon } = results[0];
       const latN = parseFloat(lat);
       const lonN = parseFloat(lon);
       showNearest(latN, lonN, `${t('results.title')} «${q}»`);
-      searchStatus.textContent = t('search.found');
-      searchStatus.classList.add('success');
+      if (searchStatus) searchStatus.textContent = t('search.found');
     }).catch(() => {
       setSearchLoading(false);
-      searchStatus.textContent = t('search.failed');
-      searchStatus.classList.add('error');
+      if (searchStatus) searchStatus.textContent = t('search.failed');
+      showLocationErrorInPanel(t('search.failed'));
     });
   }
 
@@ -648,25 +682,19 @@
     resultsPanel.classList.remove('is-open');
   }
 
-  if (btnUseLocation) btnUseLocation.addEventListener('click', () => useLocation({}));
-  if (btnTryAgain) btnTryAgain.addEventListener('click', () => useLocation({ fromPanic: true }));
+  if (btnLocate) btnLocate.addEventListener('click', useLocation);
+  if (btnPanic) btnPanic.addEventListener('click', useLocation);
+  if (btnTryAgain) btnTryAgain.addEventListener('click', useLocation);
   if (btnSearchFallback) btnSearchFallback.addEventListener('click', () => {
-    const mapSection = document.getElementById('map-section');
-    const searchCard = document.querySelector('.action-search');
-    const target = searchInput ? searchInput : (searchCard || mapSection);
-    if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    closeResultsPanel();
     if (searchInput) {
       searchInput.focus();
+      searchInput.select();
     }
   });
-  if (btnPanic) btnPanic.addEventListener('click', () => {
-    const mapSection = document.getElementById('map-section');
-    if (mapSection && mapSection.scrollIntoView) {
-      mapSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    useLocation({ fromPanic: true });
-  });
-  if (btnSearch) btnSearch.addEventListener('click', searchAddress);
+  if (btnInfoToggle) btnInfoToggle.addEventListener('click', openInfoDrawer);
+  if (btnCloseInfo) btnCloseInfo.addEventListener('click', closeInfoDrawer);
+  if (infoOverlay) infoOverlay.addEventListener('click', closeInfoDrawer);
   if (searchInput) {
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
