@@ -195,7 +195,7 @@
   let map = null;
   let shelterLayer = null;
   let userMarker = null;
-  let shelterMarkersById = {};
+  let shelterMarkersById = {};   // keyed by "lat,lon" to avoid duplicate-ID collisions
 
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
@@ -414,21 +414,25 @@
       m.shelter = s;
       m.on('click', () => m.bindPopup(popupContent(s)).openPopup());
       m.addTo(shelterLayer);
-      shelterMarkersById[s.id] = m;
+      shelterMarkersById[`${s.lat},${s.lon}`] = m;
       bounds.push([s.lat, s.lon]);
     });
     if (bounds.length > 0) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 11 });
     resultsPanel.classList.remove('is-open');
   }
 
-  function addUserMarker(lat, lon) {
+  function addUserMarker(lat, lon, isSearchLocation = false) {
     clearUserMarker();
+    const markerClass = isSearchLocation ? 'search-location-marker' : 'user-location-marker';
+    const markerHtml = isSearchLocation 
+      ? '<svg width="28" height="40" viewBox="0 0 28 40" fill="none"><path d="M14 2C8.5 2 4 6.5 4 12c0 3.5 2 7 5 9l5 14 5-14c3-2 5-5.5 5-9 0-5.5-4.5-10-10-10z" fill="white" stroke="#2d5a4a" stroke-width="2"/><circle cx="14" cy="12" r="3.5" fill="#2d5a4a"/></svg>'
+      : '<span class="user-dot"></span>';
     userMarker = L.marker([lat, lon], {
       icon: L.divIcon({
-        className: 'user-location-marker',
-        html: '<span class="user-dot"></span>',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        className: markerClass,
+        html: markerHtml,
+        iconSize: isSearchLocation ? [28, 40] : [20, 20],
+        iconAnchor: isSearchLocation ? [14, 40] : [10, 10]
       })
     }).addTo(map);
     map.setView([lat, lon], USER_MARKER_ZOOM);
@@ -454,8 +458,34 @@
     const nearest = getNearest(lat, lon);
     if (resultsErrorState) resultsErrorState.style.display = 'none';
     resultsTitle.textContent = title || t('ui.nearest');
+    // Determine if this is a search result (not GPS) by checking if title contains "results.title"
+    const isSearchLocation = title && title.includes(t('results.title'));
     if (nearest.length > 0) {
       const first = nearest[0];
+      
+      // Reset all shelter markers to normal style
+      Object.values(shelterMarkersById).forEach(m => {
+        m.setStyle({
+          radius: 7,
+          fillColor: '#2d5a4a',
+          weight: 1.5,
+          fillOpacity: 0.75
+        });
+        if (m.getElement()) {
+          m.getElement().classList.remove('nearest-shelter-pulse');
+        }
+      });
+      
+      // Highlight nearest shelter: CSS class controls the red color (overrides Leaflet's SVG fill
+      // attribute on every redraw); setStyle only changes the size.
+      const nearestMarker = shelterMarkersById[`${first.lat},${first.lon}`];
+      if (nearestMarker) {
+        nearestMarker.setStyle({ radius: 11, weight: 2, fillOpacity: 0.95 });
+        if (nearestMarker.getElement()) {
+          nearestMarker.getElement().classList.add('nearest-shelter-pulse');
+        }
+      }
+      
       if (resultsNearestBlock && nearestShelterAddress && nearestShelterMeta) {
         nearestShelterAddress.textContent = first.address || first.id;
         nearestShelterMeta.textContent = first.distance.toFixed(1) + ' ' + t('ui.km_away') + ' · ' + t('ui.capacity') + ' ' + (first.capacity || '—');
@@ -471,7 +501,9 @@
     } else if (resultsNearestBlock) {
       resultsNearestBlock.style.display = 'none';
     }
-    resultsList.innerHTML = nearest.slice(1).map(s => `
+    const nearestLat = nearest.length > 0 ? nearest[0].lat : null;
+    const nearestLon = nearest.length > 0 ? nearest[0].lon : null;
+    resultsList.innerHTML = nearest.slice(1).filter(s => !(s.lat === nearestLat && s.lon === nearestLon)).map(s => `
       <li class="result-item" data-lat="${s.lat}" data-lon="${s.lon}">
         <div class="result-address">${escapeHtml(s.address || s.id)}</div>
         <div class="result-meta">${s.distance.toFixed(1)} ${t('ui.km')} · ${t('ui.capacity')} ${escapeHtml(String(s.capacity))} · ${escapeHtml(s.district || '')}</div>
@@ -501,12 +533,9 @@
           map.setView([lat, lon], zoom);
         }
 
-        const s = shelters.find(x => x.lat === lat && x.lon === lon && x.distance != null);
-        if (s) {
-          const marker = shelterMarkersById[s.id];
-          // autoPan: false prevents Leaflet from re-panning after we set the view
-          if (marker && marker.bindPopup) marker.bindPopup(popupContent(s), { autoPan: false }).openPopup();
-        }
+        const marker = shelterMarkersById[`${lat},${lon}`];
+        // autoPan: false prevents Leaflet from re-panning after we set the view
+        if (marker && marker.bindPopup) marker.bindPopup(popupContent(marker.shelter), { autoPan: false }).openPopup();
       });
     });
 
@@ -530,16 +559,13 @@
         } else {
           map.setView([nLat, nLon], zoom);
         }
-        const s = shelters.find(x => x.lat === nLat && x.lon === nLon && x.distance != null);
-        if (s) {
-          const marker = shelterMarkersById[s.id];
-          if (marker && marker.bindPopup) marker.bindPopup(popupContent(s), { autoPan: false }).openPopup();
-        }
+        const nearMarker = shelterMarkersById[`${nLat},${nLon}`];
+        if (nearMarker && nearMarker.bindPopup) nearMarker.bindPopup(popupContent(nearMarker.shelter), { autoPan: false }).openPopup();
       };
     }
 
     resultsPanel.classList.add('is-open');
-    addUserMarker(lat, lon);
+    addUserMarker(lat, lon, isSearchLocation);
   }
 
   function setLocationLoading(loading) {
