@@ -781,15 +781,27 @@
   }
 
   function geocodeSuggestions(query) {
+    // Photon (komoot) supports prefix/partial matching, unlike Nominatim.
+    // We restrict to the Cyprus bounding box and return up to 8 suggestions.
     const params = new URLSearchParams({
-      q: query + ', Cyprus',
-      format: 'json',
+      q: query,
       limit: '8',
-      countrycodes: 'cy'
+      lang: currentLang === 'tr' ? 'tr' : currentLang === 'el' ? 'el' : 'en',
+      bbox: '32.27,34.58,34.60,35.18', // Cyprus: minLon,minLat,maxLon,maxLat
     });
-    return fetch(`${NOMINATIM_URL}?${params}`, {
+    return fetch(`https://photon.komoot.io/api/?${params}`, {
       headers: { 'Accept': 'application/json' }
-    }).then(r => r.json());
+    }).then(r => r.json()).then(data => {
+      // Normalise GeoJSON features to { display_name, lat, lon }
+      return (data.features || []).map(f => {
+        const p = f.properties || {};
+        const parts = [p.name, p.city || p.town || p.village, p.county || p.state].filter(Boolean);
+        // Deduplicate consecutive identical parts (e.g. name === city)
+        const label = parts.filter((v, i) => i === 0 || v !== parts[i - 1]).join(', ');
+        const [lon, lat] = f.geometry.coordinates;
+        return { display_name: label, lat, lon };
+      }).filter(r => r.display_name);
+    });
   }
 
   function hideSuggestions() {
@@ -801,10 +813,17 @@
   }
 
   // Show a non-selectable status/message row in the suggestions dropdown
+  function positionSuggestions() {
+    if (!searchInput || !searchSuggestions) return;
+    const rect = searchInput.getBoundingClientRect();
+    searchSuggestions.style.top = `${rect.bottom + 3}px`;
+  }
+
   function showSearchMessage(msg) {
     if (!searchSuggestions) return;
     searchSuggestions.innerHTML = `<li class="search-suggestion-item search-suggestion-empty" role="status" tabindex="-1" aria-disabled="true">${escapeHtml(msg)}</li>`;
     searchSuggestions.classList.add('is-open');
+    positionSuggestions();
     if (searchInput) searchInput.setAttribute('aria-expanded', 'true');
   }
 
@@ -815,6 +834,7 @@
       return `<li class="search-suggestion-item" role="option" data-lat="${r.lat}" data-lon="${r.lon}" tabindex="-1">${name}</li>`;
     }).join('');
     searchSuggestions.classList.add('is-open');
+    positionSuggestions();
     if (searchInput) searchInput.setAttribute('aria-expanded', 'true');
     $$('.search-suggestion-item', searchSuggestions).forEach((el) => {
       el.addEventListener('click', () => {
@@ -914,6 +934,9 @@
     if (searchSuggestions && searchSuggestions.classList.contains('is-open') && searchInput && !searchInput.contains(e.target) && !searchSuggestions.contains(e.target))
       hideSuggestions();
   });
+
+  window.addEventListener('scroll', () => { if (searchSuggestions && searchSuggestions.classList.contains('is-open')) positionSuggestions(); });
+  window.addEventListener('resize', () => { if (searchSuggestions && searchSuggestions.classList.contains('is-open')) positionSuggestions(); });
 
   $$('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => setLanguage(btn.getAttribute('data-lang')));

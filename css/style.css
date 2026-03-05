@@ -798,8 +798,8 @@ body {
 
 /* ── Search autocomplete ── */
 .search-suggestions {
-  position: absolute;
-  top: calc(100% + 3px);
+  position: fixed;
+  top: auto;
   left: 0;
   right: 0;
   margin: 0;
@@ -813,6 +813,7 @@ body {
   overflow-y: auto;
   z-index: 1200;
   display: none;
+  width: 100%;
 }
 
 .search-suggestions.is-open {
