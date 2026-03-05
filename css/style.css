@@ -251,18 +251,38 @@ body {
   }
 }
 
-/* Language selector in drawer — always visible */
+/* Language selector in drawer — styled as section */
 .drawer-lang {
   display: flex;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--color-border);
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .drawer-lang .lang-btn {
+  flex: 1;
+  min-width: 80px;
   font-size: 0.95rem;
-  padding: 0.4rem 0.7rem;
+  font-weight: 500;
+  padding: 0.5rem 0.8rem;
   min-height: 44px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.drawer-lang .lang-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-accent);
+}
+
+.drawer-lang .lang-btn.is-active {
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  font-weight: 700;
 }
 
 /* ── Emergency FAB ── */
@@ -676,18 +696,34 @@ body {
 
 .contact-note {
   font-size: 0.88rem;
-  color: var(--color-text-muted);
-  margin: 0 0 0;
+  color: var(--color-text);
+  margin: 1rem 0 0;
+  padding: 0.8rem;
+  background: var(--color-bg-secondary);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+}
+
+.contact-note span {
+  display: block;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .contact-note a {
-  color: var(--color-accent);
+  color: var(--color-text);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 .contact-note a:hover {
-  text-decoration: underline;
+  color: var(--color-accent);
 }
 
 /* Info footer inside drawer */
@@ -1011,7 +1047,7 @@ body {
   }
 
   .search-input {
-    font-size: 1rem;
+    font-size: 1.05rem;
     height: 40px;
   }
 
@@ -1026,31 +1062,59 @@ body {
   }
 
   .lang-btn {
-    font-size: 0.85rem;
-    padding: 0.35rem 0.5rem;
+    font-size: 0.95rem;
+    padding: 0.4rem 0.6rem;
   }
 
   .results-header h3 {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
   }
 
   .results-nearest-block .nearest-shelter-address {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .results-nearest-block .nearest-shelter-meta {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
   }
 
   .result-address {
-    font-size: 0.97rem;
+    font-size: 1.05rem;
   }
 
   .result-meta {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .btn-navigate-walking {
-    font-size: 0.97rem;
+    font-size: 1.05rem;
+  }
+
+  .official-links a {
+    font-size: 0.95rem;
+  }
+
+  .app-title {
+    font-size: 1rem;
+  }
+
+  .app-desc {
+    font-size: 0.95rem;
+  }
+
+  .contact-note {
+    font-size: 0.95rem;
+  }
+
+  .footer-peace {
+    font-size: 1rem;
+  }
+
+  .footer-brand {
+    font-size: 0.9rem;
+  }
+
+  .footer-meta {
+    font-size: 0.85rem;
   }
 }
