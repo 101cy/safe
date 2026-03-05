@@ -34,7 +34,8 @@
       'results.close': 'Close list',
       'results.navigate': 'Open in Maps — Navigate to nearest shelter',
       'nearest.title': 'Your nearest shelter',
-      'nearest.navigate_walking': 'Open in Maps — Walking directions',
+      'nearest.navigate_google': 'Open in Google Maps',
+      'nearest.navigate_apple': 'Open in Apple Maps',
       'official.title': 'Official sources & app',
       'official.intro': 'Shelter data is provided by the <strong>Cyprus Civil Defence</strong> under the Ministry of Interior. For the best experience on your phone, use the official app.',
       'official.link1': 'Civil Defence — Gov.cy',
@@ -86,7 +87,8 @@
       'results.close': 'Κλείσιμο λίστας',
       'results.navigate': 'Άνοιγμα σε Χάρτες — Οδήγηση στο πλησιέστερο καταφύγιο',
       'nearest.title': 'Το πλησιέστερο καταφύγιό σας',
-      'nearest.navigate_walking': 'Άνοιγμα στους Χάρτες',
+      'nearest.navigate_google': 'Άνοιγμα στο Google Maps',
+      'nearest.navigate_apple': 'Άνοιγμα στο Apple Maps',
       'official.title': 'Επίσημες πηγές και εφαρμογή',
       'official.intro': 'Τα δεδομένα καταφυγών παρέχονται από την Πολιτική Άμυνα Κύπρου υπό το Υπουργείο Εσωτερικών. Για την καλύτερη εμπειρία στο κινητό σας, χρησιμοποιήστε την επίσημη εφαρμογή.',
       'official.link1': 'Πολιτική Άμυνα — Gov.cy',
@@ -138,7 +140,8 @@
       'results.close': 'Listeyi kapat',
       'results.navigate': 'Haritalarda aç — En yakın sığınağa git',
       'nearest.title': 'En yakın sığınağınız',
-      'nearest.navigate_walking': 'Haritalarda aç — Yürüyerek yol tarifi',
+      'nearest.navigate_google': 'Google Haritalar\'da aç',
+      'nearest.navigate_apple': 'Apple Haritalar\'da aç',
       'official.title': 'Resmi kaynaklar ve uygulama',
       'official.intro': 'Sığınak verileri İçişleri Bakanlığı\'na bağlı <strong>Kıbrıs Sivil Savunma</strong> tarafından sağlanmaktadır. Telefonunuzda en iyi deneyim için resmi uygulamayı kullanın.',
       'official.link1': 'Sivil Savunma — Gov.cy',
@@ -232,6 +235,36 @@
     return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key] || key;
   }
 
+  const SEO_META = {
+    en: {
+      title: 'SAFE.101.CY — Find Civil Defence Shelters in Cyprus | GPS & Map',
+      description: 'Find your nearest civil defence shelter in the Republic of Cyprus. Use GPS or search by address. Interactive map with Civil Defence shelters. SafeCY app links.',
+      ogTitle: 'SAFE.101.CY — Find Civil Defence Shelters in Cyprus',
+      ogDescription: 'Find your nearest civil defence shelter in Cyprus. Use GPS or search by address.',
+      twitterTitle: 'SAFE.101.CY — Find Civil Defence Shelters in Cyprus',
+      twitterDescription: 'Find your nearest civil defence shelter in Cyprus. GPS, address search, interactive map.',
+      ogLocale: 'en_CY',
+    },
+    el: {
+      title: 'SAFE.101.CY — Καταφύγια Πολιτικής Άμυνας στην Κύπρο | GPS & Χάρτης',
+      description: 'Βρείτε το πλησιέστερο καταφύγιο Πολιτικής Άμυνας στην Κυπριακή Δημοκρατία. Χρησιμοποιήστε GPS ή αναζητήστε με διεύθυνση. Διαδραστικός χάρτης με επίσημα καταφύγια.',
+      ogTitle: 'SAFE.101.CY — Καταφύγια Πολιτικής Άμυνας στην Κύπρο',
+      ogDescription: 'Βρείτε το πλησιέστερο καταφύγιο Πολιτικής Άμυνας. GPS ή αναζήτηση με διεύθυνση.',
+      twitterTitle: 'SAFE.101.CY — Καταφύγια Πολιτικής Άμυνας στην Κύπρο',
+      twitterDescription: 'Βρείτε καταφύγια Πολιτικής Άμυνας στην Κύπρο. GPS, αναζήτηση διεύθυνσης, διαδραστικός χάρτης.',
+      ogLocale: 'el_CY',
+    },
+    tr: {
+      title: 'SAFE.101.CY — Kıbrıs\'ta Sivil Savunma Sığınakları | GPS & Harita',
+      description: 'Kıbrıs Cumhuriyeti\'nde en yakın sivil savunma sığınağını bulun. GPS veya adres araması ile. Resmi sığınak haritası.',
+      ogTitle: 'SAFE.101.CY — Kıbrıs\'ta Sivil Savunma Sığınakları',
+      ogDescription: 'En yakın sivil savunma sığınağını bulun. GPS veya adres ile arayın.',
+      twitterTitle: 'SAFE.101.CY — Kıbrıs\'ta Sivil Savunma Sığınakları',
+      twitterDescription: 'Kıbrıs\'ta sığınak bulun. GPS, adres araması, etkileşimli harita.',
+      ogLocale: 'tr_CY',
+    }
+  };
+
   function applyTranslations() {
     document.documentElement.lang = currentLang === 'el' ? 'el' : currentLang === 'tr' ? 'tr' : 'en';
     $$('[data-i18n]').forEach(el => {
@@ -252,11 +285,22 @@
     });
     const contactLabel = document.querySelector('.contact-note [data-i18n="contact.label"]');
     if (contactLabel) contactLabel.textContent = t('contact.label');
+
+    const meta = SEO_META[currentLang] || SEO_META.en;
     const titleEl = document.querySelector('title');
-    if (titleEl) {
-      const titles = { en: 'SAFE.101.CY — Shelters in Cyprus', el: 'SAFE.101.CY — Καταφύγια στην Κύπρο', tr: 'SAFE.101.CY — Kıbrıs\'ta sığınaklar' };
-      titleEl.textContent = titles[currentLang] || titles.en;
-    }
+    if (titleEl) titleEl.textContent = meta.title;
+    const descEl = document.querySelector('meta[name="description"]');
+    if (descEl) descEl.setAttribute('content', meta.description);
+    const ogTitleEl = document.getElementById('og-title');
+    if (ogTitleEl) ogTitleEl.setAttribute('content', meta.ogTitle);
+    const ogDescEl = document.getElementById('og-description');
+    if (ogDescEl) ogDescEl.setAttribute('content', meta.ogDescription);
+    const ogLocaleEl = document.getElementById('og-locale');
+    if (ogLocaleEl) ogLocaleEl.setAttribute('content', meta.ogLocale);
+    const twTitleEl = document.getElementById('twitter-title');
+    if (twTitleEl) twTitleEl.setAttribute('content', meta.twitterTitle);
+    const twDescEl = document.getElementById('twitter-description');
+    if (twDescEl) twDescEl.setAttribute('content', meta.twitterDescription);
   }
 
   function setLanguage(lang) {
@@ -407,7 +451,8 @@
       }
       if (resultsNavigateLink) {
         resultsNavigateLink.href = getMapsNavUrl(first.lat, first.lon);
-        resultsNavigateLink.textContent = t('nearest.navigate_walking');
+        const navKey = isIOS() ? 'nearest.navigate_apple' : 'nearest.navigate_google';
+        resultsNavigateLink.textContent = t(navKey);
       }
     } else if (resultsNearestBlock) {
       resultsNearestBlock.style.display = 'none';
