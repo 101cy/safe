@@ -211,7 +211,15 @@
     return 'en';
   }
 
-  let currentLang = getBrowserLanguage();
+  function getStoredLanguage() {
+    try {
+      const stored = localStorage.getItem(STORAGE_LANG_KEY);
+      if (stored === 'en' || stored === 'el' || stored === 'tr') return stored;
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+
+  let currentLang = getStoredLanguage() || getBrowserLanguage();
   let shelters = [];
   let map = null;
   let shelterLayer = null;
@@ -223,6 +231,8 @@
   let lastNearestLat = null;
   let lastNearestLon = null;
   let lastNearestTitle = null;
+  /** When true, do not update nearest-shelters list from GPS until user clicks "Take me to nearest" or GPS btn */
+  let nearestPinnedToSearch = false;
 
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
@@ -352,16 +362,28 @@
   function setLanguage(lang) {
     if (lang !== 'en' && lang !== 'el' && lang !== 'tr') return;
     currentLang = lang;
+    try {
+      localStorage.setItem(STORAGE_LANG_KEY, lang);
+    } catch (e) { /* ignore */ }
     applyTranslations();
     $$('.lang-btn').forEach(btn => {
       const isActive = btn.getAttribute('data-lang') === lang;
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-pressed', isActive);
     });
+    // Remember which marker had the popup open so we can reopen with translated content
+    const popupSource = map && map._popup && map._popup._source;
+    const hadShelterPopup = popupSource && popupSource.shelter != null;
     // Lazy-load shelter data for this language, then update marker refs and panel text
     loadShelters(lang).then(() => {
       updateMarkerShelterRefs();
       refreshResultsPanel();
+      if (map) {
+        map.closePopup();
+        if (hadShelterPopup && popupSource.shelter) {
+          popupSource.bindPopup(popupContent(popupSource.shelter), { autoPan: false }).openPopup();
+        }
+      }
     });
   }
 
@@ -502,7 +524,7 @@
         fillOpacity: 0.75
       });
       m.shelter = s;
-      m.on('click', () => m.bindPopup(popupContent(s)).openPopup());
+      m.on('click', () => m.bindPopup(popupContent(m.shelter)).openPopup());
       m.addTo(shelterLayer);
       shelterMarkersById[`${s.lat},${s.lon}`] = m;
       bounds.push([s.lat, s.lon]);
@@ -829,6 +851,7 @@
       showLocationErrorInPanel(msg);
       return;
     }
+    nearestPinnedToSearch = false; // resume updating list from GPS
     if (locationStatus) locationStatus.textContent = '';
     setLocationLoading(true);
 
@@ -836,6 +859,7 @@
     gpsFirstFix = true;
     gpsWatchId = navigator.geolocation.watchPosition(
       pos => {
+        if (nearestPinnedToSearch) return; // keep showing search-based list until user clicks GPS or "Take me to nearest"
         const { latitude, longitude } = pos.coords;
         const isFirst = gpsFirstFix;
         gpsFirstFix = false;
@@ -1017,6 +1041,7 @@
         const lon = parseFloat(el.dataset.lon);
         hideSuggestions();
         if (searchInput) searchInput.value = el.textContent;
+        nearestPinnedToSearch = true; // stop GPS from overwriting this list until user clicks "Take me to nearest" or GPS
         showNearest(lat, lon, `${t('results.title')} — ${el.textContent}`);
         if (searchStatus) searchStatus.textContent = t('search.found');
       });
@@ -1083,6 +1108,7 @@
       }
       hideSuggestions();
       const { lat, lon } = results[0];
+      nearestPinnedToSearch = true; // stop GPS from overwriting this list until user clicks "Take me to nearest" or GPS
       showNearest(parseFloat(lat), parseFloat(lon), `${t('results.title')} «${q}»`);
       if (searchStatus) searchStatus.textContent = t('search.found');
     }).catch(err => {
@@ -1142,6 +1168,12 @@
   });
 
   applyTranslations();
+  // Sync lang buttons to stored/initial language
+  $$('.lang-btn').forEach(btn => {
+    const isActive = btn.getAttribute('data-lang') === currentLang;
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', isActive);
+  });
   loadShelters().then(() => {
     initMap();
     viewAllShelters();
