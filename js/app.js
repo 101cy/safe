@@ -783,10 +783,10 @@
   function geocodeSuggestions(query) {
     // Photon (komoot) supports prefix/partial matching, unlike Nominatim.
     // We restrict to the Cyprus bounding box and return up to 8 suggestions.
+    // No lang parameter — allows search in any language (English, Greek, Turkish, etc.)
     const params = new URLSearchParams({
       q: query,
       limit: '8',
-      lang: currentLang === 'tr' ? 'tr' : currentLang === 'el' ? 'el' : 'en',
       bbox: '32.27,34.58,34.60,35.18', // Cyprus: minLon,minLat,maxLon,maxLat
     });
     return fetch(`https://photon.komoot.io/api/?${params}`, {
