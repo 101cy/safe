@@ -92,7 +92,7 @@
       'nearest.navigate_google': 'Άνοιγμα στο Google Maps',
       'nearest.navigate_apple': 'Άνοιγμα στο Apple Maps',
       'official.title': 'Επίσημες πηγές και εφαρμογή',
-      'official.intro': 'Τα δεδομένα καταφυγών παρέχονται από την Πολιτική Άμυνα Κύπρου υπό το Υπουργείο Εσωτερικών. Για την καλύτερη εμπειρία στο κινητό σας, χρησιμοποιήστε την επίσημη εφαρμογή.',
+      'official.intro': 'Τα δεδομένα παρέχονται από την Πολιτική Άμυνα Κύπρου υπό το Υπουργείο Εσωτερικών. Για την καλύτερη εμπειρία στο κινητό σας, χρησιμοποιήστε την επίσημη εφαρμογή.',
       'official.link1': 'Πολιτική Άμυνα — Gov.cy',
       'official.link2': 'Τμήμα Πολιτικής Άμυνας — Υπουργείο Εσωτερικών',
       'official.link3': 'Πολιτική Απορρήτου SafeCY',
@@ -197,6 +197,7 @@
   let userMarker = null;
   let shelterMarkersById = {};   // keyed by "lat,lon" to avoid duplicate-ID collisions
   let gpsWatchId = null;
+  let gpsFirstFix = false;
   const shelterCache = {};       // lazy-loaded shelter data keyed by lang
   let lastNearestLat = null;
   let lastNearestLon = null;
@@ -499,7 +500,6 @@
         iconAnchor: isSearchLocation ? [14, 40] : [10, 10]
       })
     }).addTo(map);
-    map.setView([lat, lon], USER_MARKER_ZOOM);
   }
 
   function popupContent(s) {
@@ -633,6 +633,10 @@
 
     resultsPanel.classList.add('is-open');
     addUserMarker(lat, lon, isSearchLocation);
+    // For search: center on the searched location (GPS centering is handled by useLocation)
+    if (isSearchLocation) {
+      map.setView([lat, lon], USER_MARKER_ZOOM);
+    }
   }
 
   function setLocationLoading(loading) {
@@ -683,14 +687,39 @@
     setLocationLoading(true);
 
     // Start watching position (live GPS tracking)
+    gpsFirstFix = true;
     gpsWatchId = navigator.geolocation.watchPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
+        const isFirst = gpsFirstFix;
+        gpsFirstFix = false;
         showNearest(latitude, longitude, t('ui.shelters_near'));
         if (locationStatus) locationStatus.textContent = t('location.found');
         setLocationLoading(false);
         // Add pulsing animation to indicate active tracking
         if (btnLocate) btnLocate.classList.add('is-loading');
+
+        // On first fix: fit map to show both user location and nearest shelter
+        if (isFirst) {
+          const nearest = getNearest(latitude, longitude);
+          if (nearest.length > 0) {
+            const userLL = L.latLng(latitude, longitude);
+            const shelterLL = L.latLng(nearest[0].lat, nearest[0].lon);
+            const topbarEl = document.querySelector('.topbar');
+            const topPad = topbarEl ? topbarEl.getBoundingClientRect().bottom : 60;
+            const btmPad = window.innerWidth < 769 && resultsPanel
+              ? resultsPanel.getBoundingClientRect().height
+              : 0;
+            map.fitBounds(L.latLngBounds([userLL, shelterLL]), {
+              paddingTopLeft:     [40, topPad + 40],
+              paddingBottomRight: [40, btmPad + 40],
+              maxZoom: 16,
+              animate: true
+            });
+          } else {
+            map.setView([latitude, longitude], USER_MARKER_ZOOM);
+          }
+        }
       },
       err => {
         let msg;
@@ -715,6 +744,7 @@
       gpsWatchId = null;
       if (btnLocate) btnLocate.classList.remove('is-loading');
     }
+    gpsFirstFix = false;
   }
 
   function geocode(query) {
