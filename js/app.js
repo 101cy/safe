@@ -70,6 +70,13 @@
       'ui.km_away': 'km away',
       'ui.nearest': 'Nearest shelters',
       'ui.shelters_near': 'Shelters near you',
+      'legend.title': 'Map legend',
+      'legend.gps': 'GPS location',
+      'legend.shelter': 'Shelter',
+      'legend.nearest': 'Nearest shelter',
+      'legend.search': 'Searched location',
+      'about.title': 'About',
+      'info.title': 'Info',
     },
     el: {
       'hero.title': 'Βρείτε το πλησιέστερο καταφύγιο',
@@ -125,6 +132,13 @@
       'ui.km_away': 'χλμ μακριά',
       'ui.nearest': 'Πλησιέστερα καταφύγια',
       'ui.shelters_near': 'Καταφύγια κοντά σας',
+      'legend.gps': 'Θέση GPS',
+      'legend.shelter': 'Καταφύγιο',
+      'legend.nearest': 'Πλησιέστερο καταφύγιο',
+      'legend.search': 'Τοποθεσία αναζήτησης',
+      'legend.title': 'Υπόμνημα χάρτη',
+      'about.title': 'Σχετικά',
+      'info.title': 'Πληροφορίες',
     },
     tr: {
       'hero.title': 'En yakın sığınağı bulun',
@@ -180,6 +194,13 @@
       'ui.km_away': 'km uzakta',
       'ui.nearest': 'En yakın sığınaklar',
       'ui.shelters_near': 'Yakınınızdaki sığınaklar',
+      'legend.gps': 'GPS konumu',
+      'legend.shelter': 'Sığınak',
+      'legend.nearest': 'En yakın sığınak',
+      'legend.search': 'Aranan konum',
+      'legend.title': 'Harita açıklaması',
+      'about.title': 'Hakkında',
+      'info.title': 'Bilgi',
     }
   };
 
