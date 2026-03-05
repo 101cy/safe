@@ -254,6 +254,8 @@
   const APPLE_MAPS_NAV_URL = 'https://maps.apple.com/?daddr=';
   const APPLE_MAPS_WALKING = '&dirflg=w';
   const AUTCOMPLETE_DEBOUNCE_MS = 350;
+  const NOMINATIM_ENRICH_DELAY_MS = 500; // extra ms after Photon before firing Nominatim
+  const PHOTON_MIN_RESULTS = 3;          // if Photon returns fewer, fire Nominatim immediately
 
   function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -272,6 +274,7 @@
   }
   const MIN_QUERY_LENGTH = 2;
   let autocompleteDebounceTimer = null;
+  let nominatimEnrichTimer = null;
   let lastSuggestionsQuery = '';
 
   function t(key) {
@@ -892,20 +895,25 @@
 
   function geocode(query) {
     const params = new URLSearchParams({
-      q: query + ', Cyprus',
+      q: query,
       format: 'json',
       limit: '1',
-      countrycodes: 'cy'
+      countrycodes: 'cy',
+      addressdetails: '1'
     });
+
+    // Prioritize user's language, but fallback to English/others
+    const langPriority = currentLang === 'el' ? 'el,en,tr' : 'en,el,tr';
+
     return fetch(`${NOMINATIM_URL}?${params}`, {
-      headers: { 'Accept': 'application/json' }
+      headers: { 
+        'Accept': 'application/json',
+        'Accept-Language': langPriority
+      }
     }).then(r => r.json());
   }
 
-  function geocodeSuggestions(query) {
-    // Photon (komoot) supports prefix/partial matching, unlike Nominatim.
-    // We restrict to the Cyprus bounding box and return up to 8 suggestions.
-    // No lang parameter — allows search in any language (English, Greek, Turkish, etc.)
+  function geocodePhoton(query) {
     const params = new URLSearchParams({
       q: query,
       limit: '8',
@@ -914,16 +922,61 @@
     return fetch(`https://photon.komoot.io/api/?${params}`, {
       headers: { 'Accept': 'application/json' }
     }).then(r => r.json()).then(data => {
-      // Normalise GeoJSON features to { display_name, lat, lon }
       return (data.features || []).map(f => {
         const p = f.properties || {};
         const parts = [p.name, p.city || p.town || p.village, p.county || p.state].filter(Boolean);
-        // Deduplicate consecutive identical parts (e.g. name === city)
         const label = parts.filter((v, i) => i === 0 || v !== parts[i - 1]).join(', ');
         const [lon, lat] = f.geometry.coordinates;
         return { display_name: label, lat, lon };
       }).filter(r => r.display_name);
     });
+  }
+
+  function geocodeNominatimSuggestions(query) {
+    const params = new URLSearchParams({
+      q: query,
+      format: 'json',
+      limit: '5',
+      countrycodes: 'cy',
+      addressdetails: '1'
+    });
+    const langPriority = currentLang === 'el' ? 'el,en,tr' : 'en,el,tr';
+    return fetch(`${NOMINATIM_URL}?${params}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Accept-Language': langPriority
+      }
+    }).then(r => r.json()).then(data => {
+      return (data || []).map(f => {
+        let label = f.display_name;
+        if (f.address) {
+          const main = f.address.amenity || f.address.shop || f.address.building || f.address.road;
+          const loc = f.address.city || f.address.town || f.address.village || f.address.municipality;
+          if (main && loc) label = `${main}, ${loc}`;
+        }
+        return { display_name: label, lat: parseFloat(f.lat), lon: parseFloat(f.lon) };
+      });
+    });
+  }
+
+  // Merge Photon and Nominatim results, deduplicating by proximity.
+  // When both find the same location, keep Photon's result but swap its label
+  // for Nominatim's if the UI is in Greek or Turkish (better language match).
+  function mergeGeoResults(photonResults, nominatimResults) {
+    const THRESHOLD = 0.001; // ~100 metres
+    const preferNominatimLabel = currentLang === 'el' || currentLang === 'tr';
+    const merged = photonResults.map(p => ({ ...p }));
+    nominatimResults.forEach(n => {
+      const dupIdx = merged.findIndex(p =>
+        Math.abs(p.lat - n.lat) < THRESHOLD && Math.abs(p.lon - n.lon) < THRESHOLD
+      );
+      if (dupIdx >= 0) {
+        if (preferNominatimLabel) merged[dupIdx].display_name = n.display_name;
+      } else {
+        merged.push(n);
+      }
+    });
+    return merged.slice(0, 8);
   }
 
   function hideSuggestions() {
@@ -973,20 +1026,44 @@
   function onSearchInput() {
     const q = (searchInput && searchInput.value || '').trim();
     if (autocompleteDebounceTimer) clearTimeout(autocompleteDebounceTimer);
+    if (nominatimEnrichTimer) clearTimeout(nominatimEnrichTimer);
     if (q.length < MIN_QUERY_LENGTH) {
       hideSuggestions();
       return;
     }
     autocompleteDebounceTimer = setTimeout(() => {
       lastSuggestionsQuery = q;
-      geocodeSuggestions(q).then(results => {
+
+      // Phase 1: Photon — fast, fuzzy, great for POIs
+      geocodePhoton(q).then(photonResults => {
         if (lastSuggestionsQuery !== q) return;
-        if (!results || results.length === 0) {
+
+        if (photonResults && photonResults.length > 0) {
+          showSuggestions(photonResults);
+        } else {
           showSearchMessage(t('search.no_suggestions'));
-          return;
         }
-        showSuggestions(results);
-      }).catch(() => showSearchMessage(t('search.network_error')));
+
+        // Phase 2: Nominatim — language-aware, fills gaps
+        // Fire immediately if Photon returned few results, otherwise wait for typing pause
+        const enrichDelay = (!photonResults || photonResults.length < PHOTON_MIN_RESULTS)
+          ? 0
+          : NOMINATIM_ENRICH_DELAY_MS;
+
+        nominatimEnrichTimer = setTimeout(() => {
+          if (lastSuggestionsQuery !== q) return;
+          geocodeNominatimSuggestions(q).then(nominatimResults => {
+            if (lastSuggestionsQuery !== q) return;
+            if (!nominatimResults || nominatimResults.length === 0) return;
+            const merged = mergeGeoResults(photonResults || [], nominatimResults);
+            if (merged.length > 0) showSuggestions(merged);
+          }).catch(() => {}); // silently ignore Nominatim errors — Photon already showed results
+        }, enrichDelay);
+
+      }).catch(() => {
+        if (lastSuggestionsQuery !== q) return;
+        showSearchMessage(t('search.network_error'));
+      });
     }, AUTCOMPLETE_DEBOUNCE_MS);
   }
 
