@@ -795,6 +795,17 @@ body {
   outline: none;
 }
 
+.search-suggestion-empty {
+  color: var(--color-text-muted);
+  cursor: default;
+  font-size: 0.85rem;
+}
+
+.search-suggestion-empty:hover,
+.search-suggestion-empty:focus {
+  background: transparent;
+}
+
 /* ── Leaflet overrides ── */
 .leaflet-popup-content-wrapper {
   border-radius: var(--radius-sm);

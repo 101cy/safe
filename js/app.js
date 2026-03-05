@@ -60,8 +60,10 @@
       'location.fallback_search': 'Search by address',
       'search.prompt': 'Please enter an address or place name.',
       'search.no_results': 'No results found. Try a different address or place in Cyprus.',
+      'search.no_suggestions': 'No suggestions.',
       'search.found': 'Location found. Showing nearest shelters.',
-      'search.failed': 'Search failed. Please try again.',
+      'search.network_error': 'Network error. Please check your connection.',
+      'search.timeout': 'Search took too long. Please try again.',
       'load.error': 'Could not load shelter data.',
       'ui.km': 'km',
       'ui.capacity': 'Capacity',
@@ -113,8 +115,10 @@
       'location.fallback_search': 'Αναζήτηση με διεύθυνση',
       'search.prompt': 'Παρακαλώ εισάγετε διεύθυνση ή όνομα τόπου.',
       'search.no_results': 'Δεν βρέθηκαν αποτελέσματα. Δοκιμάστε άλλη διεύθυνση.',
+      'search.no_suggestions': 'Χωρίς προτάσεις.',
       'search.found': 'Βρέθηκε τοποθεσία. Εμφανίζονται τα πλησιέστερα καταφύγια.',
-      'search.failed': 'Η αναζήτηση απέτυχε. Παρακαλώ δοκιμάστε ξανά.',
+      'search.network_error': 'Σφάλμα δικτύου. Ελέγξτε τη σύνδεσή σας.',
+      'search.timeout': 'Η αναζήτηση χρειάστηκε πολύ ώρα. Δοκιμάστε ξανά.',
       'load.error': 'Δεν ήταν δυνατή η φόρτωση των δεδομένων καταφυγών.',
       'ui.km': 'χλμ',
       'ui.capacity': 'Χωρητικότητα',
@@ -166,8 +170,10 @@
       'location.fallback_search': 'Adresle ara',
       'search.prompt': 'Lütfen bir adres veya yer adı girin.',
       'search.no_results': 'Sonuç bulunamadı. Kıbrıs\'ta farklı bir adres veya yer deneyin.',
+      'search.no_suggestions': 'Öneri yok.',
       'search.found': 'Konum bulundu. En yakın sığınaklar gösteriliyor.',
-      'search.failed': 'Arama başarısız. Lütfen tekrar deneyin.',
+      'search.network_error': 'Ağ hatası. Lütfen bağlantınızı kontrol edin.',
+      'search.timeout': 'Arama çok uzun sürdü. Lütfen tekrar deneyin.',
       'load.error': 'Sığınak verileri yüklenemedi.',
       'ui.km': 'km',
       'ui.capacity': 'Kapasite',
@@ -638,6 +644,14 @@
     }
   }
 
+  // Show a non-selectable status/message row in the suggestions dropdown
+  function showSearchMessage(msg) {
+    if (!searchSuggestions) return;
+    searchSuggestions.innerHTML = `<li class="search-suggestion-item search-suggestion-empty" role="status" tabindex="-1" aria-disabled="true">${escapeHtml(msg)}</li>`;
+    searchSuggestions.classList.add('is-open');
+    if (searchInput) searchInput.setAttribute('aria-expanded', 'true');
+  }
+
   function showSuggestions(results) {
     if (!searchSuggestions) return;
     searchSuggestions.innerHTML = results.slice(0, 8).map((r) => {
@@ -646,16 +660,14 @@
     }).join('');
     searchSuggestions.classList.add('is-open');
     if (searchInput) searchInput.setAttribute('aria-expanded', 'true');
-    $$('.search-suggestion-item', searchSuggestions).forEach((el, i) => {
+    $$('.search-suggestion-item', searchSuggestions).forEach((el) => {
       el.addEventListener('click', () => {
         const lat = parseFloat(el.dataset.lat);
         const lon = parseFloat(el.dataset.lon);
         hideSuggestions();
         if (searchInput) searchInput.value = el.textContent;
         showNearest(lat, lon, `${t('results.title')} — ${el.textContent}`);
-        searchStatus.textContent = t('search.found');
-        searchStatus.classList.remove('error');
-        searchStatus.classList.add('success');
+        if (searchStatus) searchStatus.textContent = t('search.found');
       });
     });
   }
@@ -672,39 +684,36 @@
       geocodeSuggestions(q).then(results => {
         if (lastSuggestionsQuery !== q) return;
         if (!results || results.length === 0) {
-          hideSuggestions();
+          showSearchMessage(t('search.no_suggestions'));
           return;
         }
         showSuggestions(results);
-      }).catch(() => hideSuggestions());
+      }).catch(() => showSearchMessage(t('search.network_error')));
     }, AUTCOMPLETE_DEBOUNCE_MS);
   }
 
   function searchAddress() {
     const q = (searchInput && searchInput.value || '').trim();
-    if (!q) {
-      if (searchStatus) searchStatus.textContent = t('search.prompt');
-      return;
-    }
+    if (!q) return;
     if (searchStatus) searchStatus.textContent = '';
     setSearchLoading(true);
 
     geocode(q).then(results => {
       setSearchLoading(false);
       if (!results || results.length === 0) {
+        showSearchMessage(t('search.no_results'));
         if (searchStatus) searchStatus.textContent = t('search.no_results');
-        showLocationErrorInPanel(t('search.no_results'));
         return;
       }
+      hideSuggestions();
       const { lat, lon } = results[0];
-      const latN = parseFloat(lat);
-      const lonN = parseFloat(lon);
-      showNearest(latN, lonN, `${t('results.title')} «${q}»`);
+      showNearest(parseFloat(lat), parseFloat(lon), `${t('results.title')} «${q}»`);
       if (searchStatus) searchStatus.textContent = t('search.found');
-    }).catch(() => {
+    }).catch(err => {
       setSearchLoading(false);
-      if (searchStatus) searchStatus.textContent = t('search.failed');
-      showLocationErrorInPanel(t('search.failed'));
+      const msg = err && err.name === 'AbortError' ? t('search.timeout') : t('search.network_error');
+      showSearchMessage(msg);
+      if (searchStatus) searchStatus.textContent = msg;
     });
   }
 
@@ -728,9 +737,11 @@
   if (searchInput) {
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
-        if (searchSuggestions && searchSuggestions.classList.contains('is-open') && searchSuggestions.querySelector('.search-suggestion-item')) {
-          searchSuggestions.querySelector('.search-suggestion-item').click();
+        const firstReal = searchSuggestions && searchSuggestions.querySelector('.search-suggestion-item:not(.search-suggestion-empty)');
+        if (firstReal) {
+          firstReal.click();
         } else {
+          hideSuggestions();
           searchAddress();
         }
       }
